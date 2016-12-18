@@ -1,1 +1,88 @@
-Foo
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+        body {
+            background-color: black;
+            font-family: Arial;
+            font-size: 32px;
+        }
+
+        h1 {
+            background-color: green;
+            border: 1px solid lime;
+            color: white;
+            font-family: Arial;
+            font-size: 16px;
+            text-align: left;
+        }
+
+        h3 {
+            background-color: green;
+            border: 1px solid lime;
+            color: white;
+            font-family: Arial;
+            font-size: 16px;
+            text-align: left;
+        }
+
+        p {
+            color: white;
+            font-family: Arial;
+            font-size: 14px;
+            font-weight: normal;
+        }
+
+        ol {
+            color: white;
+            font-family: Arial;
+            font-size: 12px;
+            font-weight: normal;
+        }
+        ul {
+            color: white;
+            font-family: Arial;
+            font-size: 12px;
+            font-weight: normal;
+        }
+        </style>
+    </head>
+    <title>BikeShare Plugin for Indigo Home Control Server</title>
+    <body>
+        <h1>BikeShare</h1>
+        <p>The BikeShare plugin allows users to create Indigo Home Control Server devices representing Bike sharing service locations. Individual devices contain data such as dock
+            location and number of available bikes. <br><br><a href="https://github.com/DaveL17/BikeShare/releases">[DOWNLOAD]</a>
+
+        <h3>Installation</h3>
+            <p>Installation is easy. Download and extract the Indigo Plugin file onto your Indigo server machine. Double-click the plugin file and follow the prompts.
+            <p>Presently, the plugin contains functionality for the following North American bike sharing services:
+                <ul>
+                <li>Aspen - We Cycle
+                <li>Chattanooga - Bike Chattanooga
+                <li>Chicago - Divvy Bikes
+                <li>Columbus - CoGo Bike Share
+                <li>New York - Citi Bike
+                <li>San Francisco - Bay Area Bike Share
+                <li>Toronto - Bike Share Toronto
+                </ul>
+
+            <p>The plugin supports only one service at a time, and the operation of the plugin is very simple.
+                <ol>
+                <li>Within the plugin preferences, select the bike sharing service that you want to use.
+                <li>Create a device for the bike dock you want to track. There is no limit to the number of station/devices you can have. The station names are automatically picked up
+                    from the service, so they will always be up to date. I have added a device state called "dataAge" which will give some indication of how current the data are.
+                </ol>
+
+            <p>Bike Share is compatible with local bike sharing services that subscribe to a specific, standard data sharing format (see below). These files are standardized across bike
+                sharing services and the resulting JSON file always begins with the following code: {"executionTime":"YYYY-MM-DD HH:MM:SS AM/PM","stationBeanList":
+            <p>If you have a bike sharing service that you want added to the plugin, it must make it's data available in the "stationBeanList" format. To have a service added to the
+                plugin, just post the url to the <a href="http://forums.indigodomo.com/viewforum.php?f=158">BikeShare forum</a> or send it directly to me via private message from the
+                Indigo website. Here's a <a href="http://www.divvybikes.com/stations/json">sample file</a>.
+            <p>This plugin is useful for things like:
+                <ul>
+                <li>Triggers: "Alert me when available bikes drops below a threshold."
+                <li>Control Pages: adding the number of available bikes.
+                </ul>
+    </body>
+</html>
+
