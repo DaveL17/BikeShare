@@ -1,0 +1,152 @@
+<?xml version="1.0"?>
+
+<Devices>
+
+<!-- Dock Device -->
+	<Device type = "custom" id = "shareDock">
+		<Name>Bike Share Station</Name>
+		<ConfigUI>
+			<Field id = "space00" type = "label">
+				<Label>Please select a bike station.
+				 </Label>
+			</Field>
+			<Field id = "stationName" type = "menu">
+				<Label>Station:</Label>
+				<List class = "self" filter = "" method = "getStationList"/>
+			</Field>
+			<Field id = "SupportsStatusRequest" type = "checkbox" hidden = "true" defaultValue = "true">
+				<Label>Enable status request / refresh button:</Label>
+			</Field>
+			<Field id = "SupportsOnState" type = "checkbox" hidden = "true" defaultValue = "false">
+				<Label>Show ON/OFF state:</Label>
+			</Field>
+			<Field id = "SupportsSensorValue" type = "checkbox" hidden="true" defaultValue = "false">
+				<Label>Show sensor value state:</Label>
+			</Field>
+			<Field id="AllowOnStateChange" type = "checkbox" hidden = "true" defaultValue = "false">
+				<Label>Enable controls to override on/off state</Label>
+			</Field>
+			<Field id="AllowSensorValueChange" type="checkbox" hidden = "true" defaultValue = "false">
+				<Label>Enable controls to override sensor value state</Label>
+			</Field>
+		</ConfigUI>
+		<States>
+			<State id = "onOffState">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Device State</TriggerLabel>
+				<ControlPageLabel>Device State</ControlPageLabel>
+			</State>
+			<State id = "altitude">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Altitude</TriggerLabel>
+				<ControlPageLabel>Altitude</ControlPageLabel>
+			</State>
+			<State id = "availableBikes">
+				<ValueType>Integer</ValueType>
+				<TriggerLabel>Available Bikes</TriggerLabel>
+				<ControlPageLabel>Available Bikes</ControlPageLabel>
+			</State>
+			<State id = "availableDocks">
+				<ValueType>Integer</ValueType>
+				<TriggerLabel>Available Docks</TriggerLabel>
+				<ControlPageLabel>Available Docks</ControlPageLabel>
+			</State>
+			<State id = "city">
+				<ValueType>String</ValueType>
+				<TriggerLabel>City</TriggerLabel>
+				<ControlPageLabel>City</ControlPageLabel>
+			</State>
+			<State id = "dataAge">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Data Age</TriggerLabel>
+				<ControlPageLabel>Data Age</ControlPageLabel>
+			</State>
+			<State id = "executionTime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Execution Time</TriggerLabel>
+				<ControlPageLabel>Execution Time</ControlPageLabel>
+			</State>
+			<State id = "isRenting">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Is Renting</TriggerLabel>
+				<ControlPageLabel>Is Renting</ControlPageLabel>
+			</State>
+			<State id = "stationID">
+				<ValueType>String</ValueType>
+				<TriggerLabel>ID</TriggerLabel>
+				<ControlPageLabel>ID</ControlPageLabel>
+			</State>
+			<State id = "landMark">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Landmark</TriggerLabel>
+				<ControlPageLabel>Landmark</ControlPageLabel>
+			</State>
+			<State id = "lastCommunicationTime">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Last Communication Time</TriggerLabel>
+				<ControlPageLabel>Last Communication Time</ControlPageLabel>
+			</State>
+			<State id = "latitude">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>Latitude</TriggerLabel>
+				<ControlPageLabel>Latitude</ControlPageLabel>
+			</State>
+			<State id = "location">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Location</TriggerLabel>
+				<ControlPageLabel>Location</ControlPageLabel>
+			</State>
+			<State id = "longitude">
+				<ValueType>Float</ValueType>
+				<TriggerLabel>Longitude</TriggerLabel>
+				<ControlPageLabel>Longitude</ControlPageLabel>
+			</State>
+			<State id = "postalCode">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Postal Code</TriggerLabel>
+				<ControlPageLabel>Postal Code</ControlPageLabel>
+			</State>
+			<State id = "renting">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Renting</TriggerLabel>
+				<ControlPageLabel>Renting</ControlPageLabel>
+			</State>
+			<State id = "stAddress1">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Street Address 1</TriggerLabel>
+				<ControlPageLabel>Street Address 1</ControlPageLabel>
+			</State>
+			<State id = "stAddress2">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Street Address 2</TriggerLabel>
+				<ControlPageLabel>Street Address 2</ControlPageLabel>
+			</State>
+			<State id = "stationName">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Station Name</TriggerLabel>
+				<ControlPageLabel>Station Name</ControlPageLabel>
+			</State>
+			<State id = "statusKey">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Status Key</TriggerLabel>
+				<ControlPageLabel>Status Key</ControlPageLabel>
+			</State>
+			<State id = "statusValue">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Status</TriggerLabel>
+				<ControlPageLabel>Status</ControlPageLabel>
+			</State>
+			<State id = "testStation">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Test Station</TriggerLabel>
+				<ControlPageLabel>Test Station</ControlPageLabel>
+			</State>
+			<State id = "totalDocks">
+				<ValueType>Integer</ValueType>
+				<TriggerLabel>Total Docks</TriggerLabel>
+				<ControlPageLabel>Total Docks</ControlPageLabel>
+			</State>
+		</States>
+		<UiDisplayStateId>onOffState</UiDisplayStateId>
+	</Device>
+</Devices>

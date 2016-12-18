@@ -1,0 +1,33 @@
+Bike Share Indigo Plugin - Developed by: DaveL17
+
+v1.0.1
+- Updates version number to full release and moves the
+  project to GitHub.
+
+v0.1.4
+- String substitution updated for future functionality.
+- Updates error trapping for future functionality.
+
+v0.1.3
+- Adds two new states: "isRenting" and "Renting".
+- Minimizes outreach to the sharing servers.
+- Ensures that devices are not restarted unnecessarily.
+- Implements setErrorStateOnServer() method.
+- Implements error screens in config dialog.
+- Further PEP8 refinements.
+- Updates plugin to use Python 2.6 as default.
+- Changes url for update checker to use https.
+- Simplifies imports.
+- UI Refinements.
+
+v0.1.2
+- Fixes duplicate state label.
+- Increases compliance with PEP8.
+
+v0.1.1
+- Better honors device start comm/stop comm.
+- Updates plugin with support URL.
+- Code refinements.
+
+v0.1.0
+- Initial plugin version worthy of public alpha.

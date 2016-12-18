@@ -1,0 +1,76 @@
+<?xml version="1.0"?>
+<PluginConfig>
+  <Field id="infoLabel00" type="label" fontSize="large">
+    <Label>Bike Share Plugin - Developed by DaveL17</Label>
+  </Field>
+  <Field id="space00" type="label">
+    <Label></Label>
+  </Field>
+  <Field id="separator00" type="separator"/>
+  <Field id="space01" type="label">
+    <Label>Plugin Settings:</Label>
+  </Field>
+  <Field id="bikeSharingService" type="menu" defaultValue="" tooltip="Please select your bike sharing service.">
+    <Label>Bike service:</Label>
+    <List>
+      <Option value="">- Select One -</Option>
+      <Option value="https://www.we-cycle.org/pbsc/stations.php">Aspen - We Cycle</Option>
+      <Option value="http://www.bikechattanooga.com/stations/json">Chattanooga - Bike Chattanooga</Option>
+      <Option value="http://divvybikes.com/stations/json">Chicago - Divvy Bikes</Option>
+      <Option value="http://cogobikeshare.com/stations/json">Columbus - CoGo Bike Share</Option>
+      <Option value="http://www.citibikenyc.com/stations/json">New York - Citi Bike</Option>
+      <Option value="http://www.bayareabikeshare.com/stations/json">San Francisco - Bay Area BikeShare</Option>
+      <Option value="http://www.bikesharetoronto.com/stations/json">Toronto - Bike Share Toronto</Option>
+    </List>
+  </Field>
+  <Field id="downloadInterval" type="menu" defaultValue="895" tooltip="Please select the desired frequency for data downloads.">
+    <Label>Download interval:</Label>
+    <List>
+      <Option value="25">30 Seconds</Option>
+      <Option value="55">1 Minute</Option>
+      <Option value="295">5 Minutes</Option>
+      <Option value="595">10 Minutes</Option>
+      <Option value="895">15 Minutes</Option>
+      <Option value="1795">30 Minutes</Option>
+      <Option value="3595">1 Hour</Option>
+      <Option value="21595">6 Hours</Option>
+      <Option value="43195">12 Hours</Option>
+      <Option value="86395">1 Day</Option>
+    </List>
+  </Field>
+  <Field id="separator01" type="separator"/>
+  <Field id="space03" type="label">
+    <Label>Plugin Update Notifications (optional):</Label>
+  </Field>
+  <Field id="updaterEmailsEnabled" type="checkbox" defaultValue="false" tooltip  =  "Enables (disables) email notifications.">
+    <Label></Label>
+    <Description>Enable update notifications</Description>
+  </Field>
+  <Field id="updaterEmail" type="textfield" tooltip="Please enter the email address to receive notifications of updates to the plugin.">
+    <Label>Email address:</Label>
+  </Field>
+  <Field id="separator02" type="separator"/>
+  <Field id="space05" type="label">
+    <Label>Debug Settings:</Label>
+  </Field>
+  <Field id="showDebugInfo" type="checkbox" tooltip="Enabling will result in verbose logging.">
+    <Label> </Label>
+    <Description>Enable/Disable</Description>
+  </Field>
+  <Field id="showDebugLevel" type="menu" defaultValue="Low"tooltip="Controls the amount of debug information written to the log.">
+    <Label>Debug level:</Label>
+    <Description></Description>
+    <List>
+      <Option value="Low">Low</Option>
+      <Option value="Medium">Medium</Option>
+      <Option value="High">High</Option>
+    </List>
+  </Field>
+  <Field id = "space7" type = "label" fontSize = "small">
+	<Label>Turn on debugging only when needed. Be careful when posting the output to the forums or other public places as it could expose sensitive information.
+
+  Low = Minimal debugging.
+  Medium = All debug logging except sensitive information.
+  High = May contain sensitive information.</Label>
+  </Field>
+</PluginConfig>
