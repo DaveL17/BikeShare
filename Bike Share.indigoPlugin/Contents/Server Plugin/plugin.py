@@ -61,9 +61,9 @@ class Plugin(indigo.PluginBase):
         self.updaterEmailsEnabled = self.pluginPrefs.get(u"updaterEmailsEnabled", "false")
 
         if self.pluginPrefs['showDebugLevel'] == "High":
-            self.debugLog(u"\n======================================================================"
-                          u"\nCaution! Debug set to high. This results in a lot of output to the log"
-                          u"\n======================================================================")
+            self.debugLog(u"======================================================================")
+            self.debugLog(u"Caution! Debug set to high. This results in a lot of output to the log")
+            self.debugLog(u"======================================================================")
             self.sleep(3)
         else:
             self.debugLog(u"Debug level set to: {0}".format(self.pluginPrefs['showDebugLevel']))
@@ -89,15 +89,11 @@ class Plugin(indigo.PluginBase):
 
     def deviceStartComm(self, dev):
         self.debugLog(u"Starting Bike Share device: {0}".format(dev.name))
-        dev.updateStateOnServer('onOffState',
-                                value=False,
-                                uiValue=u"Enabled")
+        dev.updateStateOnServer('onOffState', value=False, uiValue=u"Enabled")
 
     def deviceStopComm(self, dev):
         self.debugLog(u"Stopping Bike Share device: {0}".format(dev.name))
-        dev.updateStateOnServer('onOffState',
-                                value=False,
-                                uiValue=u"Disabled")
+        dev.updateStateOnServer('onOffState', value=False, uiValue=u"Disabled")
 
     def didDeviceCommPropertyChange(self, origDev, newDev):
         """This method tells Indigo whether it should call deviceStopComm/deviceStartComm
@@ -263,83 +259,83 @@ class Plugin(indigo.PluginBase):
         for dock in parsed_simplejson['stationBeanList']:
             if dev.pluginProps['stationName'] == dock['stationName']:
 
-                if dock['altitude'] == "":
+                if 'altitude' not in dock.keys() or dock['altitude'] == "":
                     dock['altitude'] = u"Not provided"
                 dev.updateStateOnServer('altitude', value=dock['altitude'], uiValue=u"{0}".format(dock['altitude']))
 
-                if dock['availableBikes'] == "":
+                if 'availableBikes' not in dock.keys() or dock['availableBikes'] == "":
                     dock['availableBikes'] = u"Not provided"
                 dev.updateStateOnServer('availableBikes', value=int(dock['availableBikes']), uiValue=u"{0}".format(dock['availableBikes']))
 
-                if dock['availableDocks'] == "":
+                if 'availableDocks' not in dock.keys() or dock['availableDocks'] == "":
                     dock['availableDocks'] = u"Not provided"
                 dev.updateStateOnServer('availableDocks', value=int(dock['availableDocks']), uiValue=u"{0}".format(dock['availableDocks']))
 
-                if dock['city'] == "":
+                if 'city' not in dock.keys() or dock['city'] == "":
                     dock['city'] = u"Not provided"
                 dev.updateStateOnServer('city', value=dock['city'], uiValue=u"{0}".format(dock['city']))
 
-                if parsed_simplejson['executionTime'] == "":
+                if 'executionTime' not in dock.keys() or dock['executionTime'] == "":
                     parsed_simplejson['executionTime'] = u"Not provided"
                 dev.updateStateOnServer('executionTime', value=parsed_simplejson['executionTime'], uiValue=u"{0}".format(parsed_simplejson['executionTime']))
 
-                if dock['is_renting'] == "":
+                if 'is_renting' not in dock.keys() or dock['is_renting'] == "":
                     dock['is_renting'] = u"Not provided"
                 dev.updateStateOnServer('isRenting', value=dock['is_renting'], uiValue=u"{0}".format(dock['is_renting']))
 
-                if dock['landMark'] == "":
+                if 'landMark' not in dock.keys() or dock['landMark'] == "":
                     dock['landMark'] = u"Not provided"
                 dev.updateStateOnServer('landMark', value=dock['landMark'], uiValue=u"{0}".format(dock['landMark']))
 
-                if dock['lastCommunicationTime'] == "":
+                if 'lastCommunicationTime' not in dock.keys() or dock['lastCommunicationTime'] == "":
                     dock['lastCommunicationTime'] = u"Not provided"
                 dev.updateStateOnServer('lastCommunicationTime', value=u"{0}".format(dock['lastCommunicationTime']), uiValue=u"{0}".format(dock['lastCommunicationTime']))
 
-                if dock['latitude'] == "":
+                if 'latitude' not in dock.keys() or dock['latitude'] == "":
                     dock['latitude'] = u"Not provided"
                 dev.updateStateOnServer('latitude', value=u"{0}".format(dock['latitude']), uiValue=u"{0}".format(dock['latitude']))
 
-                if dock['location'] == "":
+                if 'location' not in dock.keys() or dock['location'] == "":
                     dock['location'] = u"Not provided"
                 dev.updateStateOnServer('location', value=dock['location'], uiValue=u"{0}".format(dock['location']))
 
-                if dock['longitude'] == "":
+                if 'longitude' not in dock.keys() or dock['longitude'] == "":
                     dock['longitude'] = u"Not provided"
                 dev.updateStateOnServer('longitude', value=u"{0}".format(dock['longitude']), uiValue=u"{0}".format(dock['longitude']))
 
-                if dock['postalCode'] == "":
+                if 'postalCode' not in dock.keys() or dock['postalCode'] == "":
                     dock['postalCode'] = u"Not provided"
                 dev.updateStateOnServer('postalCode', value=dock['postalCode'], uiValue=u"{0}".format(dock['postalCode']))
 
-                if dock['renting'] == "":
+                if 'renting' not in dock.keys() or dock['renting'] == "":
                     dock['renting'] = u"Not provided"
                 dev.updateStateOnServer('renting', value=dock['renting'], uiValue=u"{0}".format(dock['renting']))
 
-                if dock['stAddress1'] == "":
+                if 'stAddress1' not in dock.keys() or dock['stAddress1'] == "":
                     dock['stAddress1'] = u"Not provided"
                 dev.updateStateOnServer('stAddress1', value=dock['stAddress1'], uiValue=u"{0}".format(dock['stAddress1']))
 
-                if dock['stAddress2'] == "":
+                if 'stAddress2' not in dock.keys() or dock['stAddress2'] == "":
                     dock['stAddress2'] = u"Not provided"
                 dev.updateStateOnServer('stAddress2', value=dock['stAddress2'], uiValue=u"{0}".format(dock['stAddress2']))
 
-                if dock['id'] == "":
+                if 'id' not in dock.keys() or dock['id'] == "":
                     dock['id'] = u"Not provided"
                 dev.updateStateOnServer('stationID', value=dock['id'], uiValue=u"{0}".format(dock['id']))
 
-                if dock['stationName'] == "":
+                if 'stationName' not in dock.keys() or dock['stationName'] == "":
                     dock['stationName'] = u"Not provided"
                 dev.updateStateOnServer('stationName', value=dock['stationName'], uiValue=u"{0}".format(dock['stationName']))
 
-                if dock['statusKey'] == "":
+                if 'statusKey' not in dock.keys() or dock['statusKey'] == "":
                     dock['statusKey'] = u"Not provided"
                 dev.updateStateOnServer('statusKey', value=bool(dock['statusKey']), uiValue=u"{0}".format(dock['statusKey']))
 
-                if dock['statusValue'] == "":
+                if 'statusValue' not in dock.keys() or dock['statusValue'] == "":
                     dock['statusValue'] = u"Not provided"
                 dev.updateStateOnServer('statusValue', value=dock['statusValue'], uiValue=u"{0}".format(dock['statusValue']))
 
-                if dock['totalDocks'] == "":
+                if 'totalDocks' not in dock.keys() or dock['totalDocks'] == "":
                     dock['totalDocks'] = u"Not provided"
                 dev.updateStateOnServer('totalDocks', value=int(dock['totalDocks']), uiValue=u"{0}".format(dock['totalDocks']))
 
