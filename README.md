@@ -1,6 +1,8 @@
 # BikeShare
 The BikeShare plugin allows users to create Indigo Home Control Server devices representing Bike sharing service locations. Individual devices contain data such as dock location and number of available bikes.
 
+[Download] (https://github.com/DaveL17/BikeShare/releases/download/v1.0.01/Bike.Share.indigoPlugin.zip)
+
 ###Installation
 Installation is easy. Download and extract the Indigo Plugin file onto your Indigo server machine. Double-click the plugin file and follow the prompts.
 
