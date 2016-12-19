@@ -56,7 +56,7 @@ class Plugin(indigo.PluginBase):
         self.debug                = self.pluginPrefs.get('showDebugInfo', False)
         self.debugLevel           = self.pluginPrefs.get('showDebugLevel', "Low")
         self.downloadInterval     = int(self.pluginPrefs.get('downloadInterval', 900))
-        self.updater              = indigoPluginUpdateChecker.updateChecker(self, 'https://dl.dropboxusercontent.com/u/2796881/bikeShare_version.html')
+        self.updater              = indigoPluginUpdateChecker.updateChecker(self, 'https://davel17.github.io/BikeShare/bikeShare_version.html')
         self.updaterEmail         = self.pluginPrefs.get('updaterEmail', "")
         self.updaterEmailsEnabled = self.pluginPrefs.get(u"updaterEmailsEnabled", "false")
 
