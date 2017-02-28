@@ -1,5 +1,9 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v1.0.02
+- Moves support URL to Github.
+- UI Refinements
+
 v1.0.01
 - Updates version number to full release and moves the
   project to GitHub.

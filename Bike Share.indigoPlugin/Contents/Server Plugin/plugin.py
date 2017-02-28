@@ -16,16 +16,16 @@ stations that support this format which are not included in this plugin,
 please feel free to post to the Bike Share Plugin forum on the Indigo
 community forums.
 """
-# TODO: Add pushPluginPrefs() method like WUnderground?
-# TODO: Move more stuff out of runConcurrentThread.
-# TODO: Eliminate redundancy between runConcurrentThread() and refreshBikeData().
 
 import datetime as dt
-import indigoPluginUpdateChecker
-import simplejson
 import socket
 import time
 import urllib2
+
+import simplejson
+
+import indigoPluginUpdateChecker
+
 try:
     import indigo
 except:
@@ -33,17 +33,18 @@ except:
 
 __author__    = "DaveL17"
 __build__     = ""
-__copyright__ = 'Copyright 2016 DaveL17'
+__copyright__ = 'Copyright 2017 DaveL17'
 __license__   = "MIT"
 __title__     = 'Bike Share Plugin for Indigo Home Control'
-__version__   = '1.0.01'
+__version__   = '1.0.02'
 
 kDefaultPluginPrefs = {
-    'downloadInterval'    : 900,    # Frequency of updates.
-    'showDebugInfo'       : False,  # Verbose debug logging?
-    'showDebugLevel'      : "Low",  # Low, Medium or High debug output.
-    'updaterEmail'        : "",     # Email to notify of plugin updates.
-    'updaterEmailsEnabled': False   # Notification of plugin updates wanted.
+    u'bikeSharingService': "",
+    u'downloadInterval'    : 900,    # Frequency of updates.
+    u'showDebugInfo'       : False,  # Verbose debug logging?
+    u'showDebugLevel'      : "Low",  # Low, Medium or High debug output.
+    u'updaterEmail'        : "",     # Email to notify of plugin updates.
+    u'updaterEmailsEnabled': False   # Notification of plugin updates wanted.
     }
 
 
