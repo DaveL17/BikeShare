@@ -57,6 +57,7 @@ class Plugin(indigo.PluginBase):
         self.debug                = self.pluginPrefs.get('showDebugInfo', False)
         self.debugLevel           = self.pluginPrefs.get('showDebugLevel', "Low")
         self.downloadInterval     = int(self.pluginPrefs.get('downloadInterval', 900))
+        self.masterTriggerDict    = {}
         updater_url = "https://davel17.github.io/BikeShare/bikeShare_version.html"
         self.updater              = indigoPluginUpdateChecker.updateChecker(self, updater_url)
         self.updaterEmail         = self.pluginPrefs.get('updaterEmail', "")
@@ -465,7 +466,41 @@ class Plugin(indigo.PluginBase):
 
                 self.updater.checkVersionPoll()
                 self.refreshBikeData()
+                self.processTriggers()
                 self.sleep(int(self.pluginPrefs.get('downloadInterval', 900)))
 
         except self.StopThread:
             self.debugLog(u"StopThread() method called.")
+
+    def triggerStartProcessing(self, trigger):
+        """ triggerStartProcessing is called when the plugin is started. The
+        method builds a global dict: {dev.id: (delay, trigger.id) """
+
+        self.masterTriggerDict[trigger.pluginProps['listOfStations']] = trigger.id
+
+    def triggerStopProcessing(self, trigger):
+        """"""
+        pass
+
+    def processTriggers(self):
+        """ The fireOfflineDeviceTriggers method will examine the statusValue
+        state of each device, determine whether there is a trigger for any
+        stations reported as not in service, and fire the corresponding
+        trigger.
+        """
+
+        try:
+            for dev in indigo.devices.itervalues(filter='self'):
+
+                station_name   = dev.states['stationName']
+                station_status = dev.states['statusValue']
+                if station_name in self.masterTriggerDict.keys():
+
+                    if station_status != 'In Service':  # This relies on all services reporting status value of 'In Service' when things are normal.
+                        trigger_id = self.masterTriggerDict[station_name]
+                        if indigo.triggers[trigger_id].enabled:
+                            indigo.trigger.execute(trigger_id)
+                            indigo.server.log(u"{0} location is not in service.".format(dev.name))
+
+        except KeyError:
+            pass
