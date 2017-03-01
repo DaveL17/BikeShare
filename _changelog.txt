@@ -1,6 +1,9 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
 v1.0.02
+- Add menu item to enable/disable all plugin devices.
+- Adds Indigo UI icon indicator control:  (green = online,
+  gray = offline/disabled/out of service, red = error/no comm)
 - Moves support URL to Github.
 - UI Refinements
 

@@ -96,6 +96,7 @@ class Plugin(indigo.PluginBase):
     def deviceStopComm(self, dev):
         self.debugLog(u"Stopping Bike Share device: {0}".format(dev.name))
         dev.updateStateOnServer('onOffState', value=False, uiValue=u"Disabled")
+        dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 
     def didDeviceCommPropertyChange(self, origDev, newDev):
         """This method tells Indigo whether it should call deviceStopComm/deviceStartComm
@@ -250,6 +251,26 @@ class Plugin(indigo.PluginBase):
 
         return sorted(station_list)
 
+    def killAllComms(self):
+        """ killAllComms() sets the enabled status of all plugin devices to
+        false. """
+
+        for dev in indigo.devices.itervalues("self"):
+            try:
+                indigo.device.enable(dev, value=False)
+            except Exception as error:
+                self.debugLog(u"Exception when trying to kill all comms. Error: {0} (Line {1})".format(error))
+
+    def unkillAllComms(self):
+        """ unkillAllComms() sets the enabled status of all plugin devices to
+        true. """
+
+        for dev in indigo.devices.itervalues("self"):
+            try:
+                indigo.device.enable(dev, value=True)
+            except Exception as error:
+                self.debugLog(u"Exception when trying to unkill all comms. Error: {0} (Line {1})".format(error))
+
     def parseBikeData(self, dev, parsed_simplejson):
         """ The parseBikeData() method takes the JSON data (contained
         within 'parsed_simplejson' variable) and assigns values to
@@ -363,6 +384,8 @@ class Plugin(indigo.PluginBase):
                         diff_time = 0
                     diff_time_str = u"{0}".format(dt.timedelta(seconds=diff_time))
                     dev.updateStateOnServer('dataAge', value=diff_time_str, uiValue=diff_time_str)
+
+
                 except:
                     dev.updateStateOnServer('dataAge', value=u"Unknown", uiValue=u"Unknown")
 
@@ -408,14 +431,23 @@ class Plugin(indigo.PluginBase):
                     try:
                         if parsed_simplejson != {}:
                             self.parseBikeData(dev, parsed_simplejson)
-                            dev.updateStateOnServer('onOffState', value=False, uiValue=u"{0}".format(dev.states['availableBikes']))
+
+                            if dev.states['statusValue'] == 'In Service':
+                                dev.updateStateOnServer('onOffState', value=False, uiValue=u"{0}".format(dev.states['availableBikes']))
+                                dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+                            else:
+                                dev.updateStateOnServer('onOffState', value=False, uiValue=u"{0}".format(dev.states['statusValue']))
+                                dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+
                         elif parsed_simplejson == {}:
                             dev.setErrorStateOnServer(u"No Comm")
                             self.debugLog(u"Comm error. Sleeping until next scheduled poll.")
+                            dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
                     except Exception as e:
                         dev.updateStateOnServer('onOffState', value=False, uiValue=u"{0}".format(dev.states['availableBikes']))
                         dev.setErrorStateOnServer(u"Error")
                         self.debugLog(u"Exception error: {0}. Sleeping until next scheduled poll.".format(e))
+                        dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
             self.debugLog(u"Data refreshed.")
             parsed_simplejson = {}
