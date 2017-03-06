@@ -1,5 +1,8 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v1.0.03
+-
+
 v1.0.02
 - Adds trigger to report when a station is not in service.
 - Add menu item to enable/disable all plugin devices.
