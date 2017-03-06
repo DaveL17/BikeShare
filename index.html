@@ -16,8 +16,8 @@
 </nav>
 
 <h1>About</h1>
-<p>The BikeShare plugin allows users to create Indigo Home Control Server devices representing Bike sharing service locations. Individual devices contain data such as dock
-    location and number of available bikes. </p>
+<p>The BikeShare plugin allows users to create Indigo Home Control Server devices representing Bike sharing service locations. Individual devices contain data such as station
+    location and number of available bikes.</p>
 
 <h3>Installation</h3>
 <img class="TextWrap" src="img/img_BikeShareConfig.png">
@@ -35,7 +35,7 @@
 <p>The plugin supports only one service at a time--but a theoretically unlimited number of stations in that service--and the operation of the plugin is very simple.
 <ol>
     <li>Within the plugin preferences, select the bike sharing service that you want to use.</li>
-    <li>Create a device for the bike dock you want to track. There is no limit to the number of station/devices you can have. The station names are automatically picked up
+    <li>Create a device for the bike station you want to track. There is no limit to the number of station/devices you can have. The station names are automatically picked up
         from the service, so they will always be up to date. I have added a device state called "dataAge" which will give some indication of how current the data are.
     </li>
 </ol>
@@ -49,23 +49,43 @@
 <p>This plugin is useful for things like:
 <ul>
     <li>Triggers: "Alert me when available bikes drops below a threshold."</li><br>
-    <li>Control Pages: adding the number of available bikes.</li>
+    <li>Control Pages: adding the number of available bikes to a control page.</li>
 </ul>
 <h3>Devices</h3>
-<p>Under construction.
+<p>There is presently one type of BikeShare device. Each device represents one station within the bike sharing service (stations represent each bike sharing location and docks represent
+    the bike slots at each station). Configuring devices is very straightforward.
 <ul>
-    <li>Under construction.</li>
+    <li>Create a new device and open the Edit Device Settings window (this may take a moment to load depending on the number of stations available within the service.</li>
+    <br>
+    <li>Select the station from the list of available stations.</li>
+    <p>That's it!  The next time the plugin refreshes, information about the station will be available throughout Indigo.</p>
 </ul>
 <h3>Actions</h3>
-<p>Under construction.
+<p>There is presently one action available.
 <ul>
-    <li>Under construction.</li>
+    <li>Create a new Indigo Action within Indigo, select Bikeshare Action, and then select Refresh Bike Data. Whenever the action is fired, Indigo will ask the plugin to download the
+    most current information for all Bikeshare stations.</li>
 </ul>
 <h3>Menu Items</h3>
-<p>Under construction.
+<img class="TextWrap" src="img/img_pluginMenuItems.png">
+<p>There are a few custom menu items for the Thingspeak plugin:
 <ul>
-    <li>Under construction.</li>
+    <li><span>&nbsp;Enable/Disable All Devices&nbsp;</span> — These two menus items can be used to quickly enable (or disable) all Bikeshare plugin devices.
+    </li>
+    <br>
+    <li><span>&nbsp;Check for Plugin Updates&nbsp;</span> — Selecting this option will test whether there is an available update to the Bikeshare plugin. This option doesn’t require
+        you to have an email account configured in Indigo (it will notify you in the Indigo log instead.)
+    </li>
+    <br>
+    <li><span>&nbsp;Refresh Data Now&nbsp;</span> — This will cause the plugin to initiate a refresh cycle outside the scheduled update.
+    </li>
+    <br>
+    <li><span>&nbsp;Toggle Debugging&nbsp;</span> — This will toggle the debug option at whatever level is currently set in the plugin configuration dialog. If debug is on, selecting
+        this option will turn it off (and vice versa.)
+    </li>
 </ul>
+<br style="clear:both"/>
+
 <h3>Scripting and Technical Details</h3>
 <p>Under construction.
 <ul>
