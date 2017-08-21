@@ -17,8 +17,12 @@ please feel free to post to the Bike Share Plugin forum on the Indigo
 community forums.
 """
 
+# TODO: allow each device to update independently.
+
 import datetime as dt
+import pydevd
 import socket
+import sys
 import time
 import urllib2
 
@@ -48,11 +52,20 @@ kDefaultPluginPrefs = {
     }
 
 
-# noinspection PyPep8Naming
 class Plugin(indigo.PluginBase):
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
-        self.debugLog(u"Plugin initialization called.")
+
+        indigo.server.log(u"")
+        indigo.server.log(u"{0:=^130}".format(" Initializing New Plugin Session "))
+        indigo.server.log(u"{0:<31} {1}".format("Plugin name:", pluginDisplayName))
+        indigo.server.log(u"{0:<31} {1}".format("Plugin version:", pluginVersion))
+        indigo.server.log(u"{0:<31} {1}".format("Plugin ID:", pluginId))
+        indigo.server.log(u"{0:<31} {1}".format("Indigo version:", indigo.server.version))
+        indigo.server.log(u"{0:<31} {1}".format("Python version:", sys.version.replace('\n', '')))
+        indigo.server.log(u"{0:=^130}".format(""))
+
+        # pydevd.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)  # To enable remote PyCharm Debugging, uncomment this line.
 
         self.debug                = self.pluginPrefs.get('showDebugInfo', False)
         self.debugLevel           = self.pluginPrefs.get('showDebugLevel', "Low")
@@ -69,7 +82,7 @@ class Plugin(indigo.PluginBase):
             self.debugLog(u"======================================================================")
             self.sleep(3)
         else:
-            self.debugLog(u"Debug level set to: {0}".format(self.pluginPrefs['showDebugLevel']))
+            self.debugLog(u"Debug level set to: {0}".format(self.pluginPrefs.get('showDebugLevel', 1)))
 
         if self.pluginPrefs['showDebugInfo'] and self.pluginPrefs['showDebugLevel'] == "High":
             self.debugLog(u"{0}".format(pluginPrefs))
@@ -84,8 +97,8 @@ class Plugin(indigo.PluginBase):
 
         try:
             self.updater.checkVersionPoll()
-        except Exception as e:
-            self.errorLog(u"Update checker error: {0}".format(e))
+        except Exception as error:
+            self.errorLog(u"Update checker error: Line: {0} Error: {1}.".format(sys.exc_traceback.tb_lineno, error))
 
     def shutdown(self):
         self.debugLog(u"Shutdown() method called.")
@@ -220,21 +233,21 @@ class Plugin(indigo.PluginBase):
 
         # Communication error handling:
         # =====================================================================
-        except urllib2.HTTPError as e:
+        except urllib2.HTTPError as error:
             parsed_simplejson = {}
-            self.errorLog(u"Unable to reach sharing service. Reason: HTTPError - {0}".format(e))
+            self.errorLog(u"Unable to reach sharing service. Reason: HTTPError - {0}".format(error))
 
-        except urllib2.URLError as e:
+        except urllib2.URLError as error:
             parsed_simplejson = {}
-            self.errorLog(u"Unable to reach sharing service. Reason: URLError - {0}".format(e))
+            self.errorLog(u"Unable to reach sharing service. Reason: URLError - {0}".format(error))
 
-        except Exception as e:
+        except Exception as error:
             parsed_simplejson = {}
-            if "invalid literal for int() with base 16: ''" in e:
+            if "invalid literal for int() with base 16: ''" in error:
                 self.errorLog(u"Congratulations! You have discovered a somewhat obscure bug in Python2.5. "
                               u"This problem should clear up on its own, but may come back periodically.")
             else:
-                self.errorLog(u"Unable to reach sharing service. Reason: Exception - {0}".format(e))
+                self.errorLog(u"Unable to reach sharing service. Line: {0} Error: {1}.".format(sys.exc_traceback.tb_lineno, error))
 
         return parsed_simplejson
 
@@ -243,14 +256,9 @@ class Plugin(indigo.PluginBase):
         names for use in device config dialogs.
         """
         self.debugLog(u"getStationList() method called.")
-
-        station_list = []
         parsed_simplejson = self.getBikeData()
 
-        for dock in parsed_simplejson['stationBeanList']:
-            station_list.append(dock['stationName'])
-
-        return sorted(station_list)
+        return sorted([dock['stationName'] for dock in parsed_simplejson['stationBeanList']])
 
     def killAllComms(self):
         """ killAllComms() sets the enabled status of all plugin devices to
@@ -260,7 +268,7 @@ class Plugin(indigo.PluginBase):
             try:
                 indigo.device.enable(dev, value=False)
             except Exception as error:
-                self.debugLog(u"Exception when trying to kill all comms. Error: {0} (Line {1})".format(error))
+                self.debugLog(u"Exception when trying to kill all comms. Line {1}: Error: {0}".format(sys.exc_traceback.tb_lineno, error))
 
     def unkillAllComms(self):
         """ unkillAllComms() sets the enabled status of all plugin devices to
@@ -270,7 +278,7 @@ class Plugin(indigo.PluginBase):
             try:
                 indigo.device.enable(dev, value=True)
             except Exception as error:
-                self.debugLog(u"Exception when trying to unkill all comms. Error: {0} (Line {1})".format(error))
+                self.debugLog(u"Exception when trying to unkill all comms. Line: {1} Error: {0}".format(sys.exc_traceback.tb_lineno, error))
 
     def parseBikeData(self, dev, parsed_simplejson):
         """ The parseBikeData() method takes the JSON data (contained
@@ -283,85 +291,38 @@ class Plugin(indigo.PluginBase):
         for dock in parsed_simplejson['stationBeanList']:
             if dev.pluginProps['stationName'] == dock['stationName']:
 
-                if 'altitude' not in dock.keys() or dock['altitude'] == "":
-                    dock['altitude'] = u"Not provided"
-                dev.updateStateOnServer('altitude', value=dock['altitude'], uiValue=u"{0}".format(dock['altitude']))
+                for key in [
+                    'altitude',
+                    'availableBikes',
+                    'availableDocks',
+                    'city',
+                    'executionTime',
+                    'landMark',
+                    'lastCommunicationTime',
+                    'latitude',
+                    'location',
+                    'longitude',
+                    'postalCode',
+                    'renting',
+                    'stAddress1',
+                    'stAddress2',
+                    'stationName',
+                    'statusKey',
+                    'statusValue',
+                    'totalDocks',
+                ]:
 
-                if 'availableBikes' not in dock.keys() or dock['availableBikes'] == "":
-                    dock['availableBikes'] = u"Not provided"
-                dev.updateStateOnServer('availableBikes', value=int(dock['availableBikes']), uiValue=u"{0}".format(dock['availableBikes']))
-
-                if 'availableDocks' not in dock.keys() or dock['availableDocks'] == "":
-                    dock['availableDocks'] = u"Not provided"
-                dev.updateStateOnServer('availableDocks', value=int(dock['availableDocks']), uiValue=u"{0}".format(dock['availableDocks']))
-
-                if 'city' not in dock.keys() or dock['city'] == "":
-                    dock['city'] = u"Not provided"
-                dev.updateStateOnServer('city', value=dock['city'], uiValue=u"{0}".format(dock['city']))
-
-                if 'executionTime' not in dock.keys() or dock['executionTime'] == "":
-                    parsed_simplejson['executionTime'] = u"Not provided"
-                dev.updateStateOnServer('executionTime', value=parsed_simplejson['executionTime'], uiValue=u"{0}".format(parsed_simplejson['executionTime']))
+                    if key not in dock.keys() or dock[key] == "":
+                        dock[key] = u"Not provided"
+                    dev.updateStateOnServer(key, value=dock[key], uiValue=u"{0}".format(dock[key]))
 
                 if 'is_renting' not in dock.keys() or dock['is_renting'] == "":
                     dock['is_renting'] = u"Not provided"
                 dev.updateStateOnServer('isRenting', value=dock['is_renting'], uiValue=u"{0}".format(dock['is_renting']))
 
-                if 'landMark' not in dock.keys() or dock['landMark'] == "":
-                    dock['landMark'] = u"Not provided"
-                dev.updateStateOnServer('landMark', value=dock['landMark'], uiValue=u"{0}".format(dock['landMark']))
-
-                if 'lastCommunicationTime' not in dock.keys() or dock['lastCommunicationTime'] == "":
-                    dock['lastCommunicationTime'] = u"Not provided"
-                dev.updateStateOnServer('lastCommunicationTime', value=u"{0}".format(dock['lastCommunicationTime']), uiValue=u"{0}".format(dock['lastCommunicationTime']))
-
-                if 'latitude' not in dock.keys() or dock['latitude'] == "":
-                    dock['latitude'] = u"Not provided"
-                dev.updateStateOnServer('latitude', value=u"{0}".format(dock['latitude']), uiValue=u"{0}".format(dock['latitude']))
-
-                if 'location' not in dock.keys() or dock['location'] == "":
-                    dock['location'] = u"Not provided"
-                dev.updateStateOnServer('location', value=dock['location'], uiValue=u"{0}".format(dock['location']))
-
-                if 'longitude' not in dock.keys() or dock['longitude'] == "":
-                    dock['longitude'] = u"Not provided"
-                dev.updateStateOnServer('longitude', value=u"{0}".format(dock['longitude']), uiValue=u"{0}".format(dock['longitude']))
-
-                if 'postalCode' not in dock.keys() or dock['postalCode'] == "":
-                    dock['postalCode'] = u"Not provided"
-                dev.updateStateOnServer('postalCode', value=dock['postalCode'], uiValue=u"{0}".format(dock['postalCode']))
-
-                if 'renting' not in dock.keys() or dock['renting'] == "":
-                    dock['renting'] = u"Not provided"
-                dev.updateStateOnServer('renting', value=dock['renting'], uiValue=u"{0}".format(dock['renting']))
-
-                if 'stAddress1' not in dock.keys() or dock['stAddress1'] == "":
-                    dock['stAddress1'] = u"Not provided"
-                dev.updateStateOnServer('stAddress1', value=dock['stAddress1'], uiValue=u"{0}".format(dock['stAddress1']))
-
-                if 'stAddress2' not in dock.keys() or dock['stAddress2'] == "":
-                    dock['stAddress2'] = u"Not provided"
-                dev.updateStateOnServer('stAddress2', value=dock['stAddress2'], uiValue=u"{0}".format(dock['stAddress2']))
-
                 if 'id' not in dock.keys() or dock['id'] == "":
                     dock['id'] = u"Not provided"
                 dev.updateStateOnServer('stationID', value=dock['id'], uiValue=u"{0}".format(dock['id']))
-
-                if 'stationName' not in dock.keys() or dock['stationName'] == "":
-                    dock['stationName'] = u"Not provided"
-                dev.updateStateOnServer('stationName', value=dock['stationName'], uiValue=u"{0}".format(dock['stationName']))
-
-                if 'statusKey' not in dock.keys() or dock['statusKey'] == "":
-                    dock['statusKey'] = u"Not provided"
-                dev.updateStateOnServer('statusKey', value=bool(dock['statusKey']), uiValue=u"{0}".format(dock['statusKey']))
-
-                if 'statusValue' not in dock.keys() or dock['statusValue'] == "":
-                    dock['statusValue'] = u"Not provided"
-                dev.updateStateOnServer('statusValue', value=dock['statusValue'], uiValue=u"{0}".format(dock['statusValue']))
-
-                if 'totalDocks' not in dock.keys() or dock['totalDocks'] == "":
-                    dock['totalDocks'] = u"Not provided"
-                dev.updateStateOnServer('totalDocks', value=int(dock['totalDocks']), uiValue=u"{0}".format(dock['totalDocks']))
 
                 # Convert ['Test Station'] string value to boolean. Assumes false.
                 # =============================================================
@@ -385,7 +346,6 @@ class Plugin(indigo.PluginBase):
                         diff_time = 0
                     diff_time_str = u"{0}".format(dt.timedelta(seconds=diff_time))
                     dev.updateStateOnServer('dataAge', value=diff_time_str, uiValue=diff_time_str)
-
 
                 except:
                     dev.updateStateOnServer('dataAge', value=u"Unknown", uiValue=u"Unknown")
@@ -420,11 +380,8 @@ class Plugin(indigo.PluginBase):
                     self.sleep(self.downloadInterval)
 
                 elif not dev.configured:
-                    indigo.server.log(u"A device has been created, but is not fully configured. Sleeping for a minute while you finish.")
+                    indigo.server.log(u"[{0}] Skipping device because it is not fully configured.".format(dev.name))
                     self.sleep(60)
-
-                elif not dev.enabled:
-                    self.sleep(self.downloadInterval)
 
                 elif dev.enabled:
                     self.getGlobalProps(dev)
@@ -444,18 +401,19 @@ class Plugin(indigo.PluginBase):
                             dev.setErrorStateOnServer(u"No Comm")
                             self.debugLog(u"Comm error. Sleeping until next scheduled poll.")
                             dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
-                    except Exception as e:
+                    except Exception as error:
                         dev.updateStateOnServer('onOffState', value=False, uiValue=u"{0}".format(dev.states['availableBikes']))
                         dev.setErrorStateOnServer(u"Error")
-                        self.debugLog(u"Exception error: {0}. Sleeping until next scheduled poll.".format(e))
+                        self.debugLog(u"Exception Line: {0} Error: {1}.".format(sys.exc_traceback.tb_lineno, error))
+                        self.debugLog(u"Sleeping until next scheduled poll.")
                         dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
             self.debugLog(u"Data refreshed.")
             parsed_simplejson = {}
 
-        except Exception as e:
+        except Exception as error:
             self.errorLog(u"There was a problem refreshing the data.  Will try on next cycle.")
-            self.errorLog(u"{0}".format(e))
+            self.errorLog(u"Exception Line: {0} Error: {1}.".format(sys.exc_traceback.tb_lineno, error))
 
     def runConcurrentThread(self):
         self.debugLog(u"runConcurrentThread initiated. Sleeping for 5 seconds to allow the Indigo Server to finish.")

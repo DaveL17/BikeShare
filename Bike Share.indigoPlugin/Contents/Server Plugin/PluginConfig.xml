@@ -45,17 +45,20 @@
     <Label>Plugin Update Notifications (optional):</Label>
   </Field>
   <Field id="separator01" type="separator"/>
-  <Field id="updaterEmailsEnabled" type="checkbox" defaultValue="false" tooltip="Enables (disables) email notifications.">
-    <Label/>
-    <Description>Enable update notifications</Description>
-  </Field>
-  <Field id="updaterEmail" type="textfield" tooltip="Please enter the email address to receive notifications of updates to the plugin.">
-    <Label>Email address:</Label>
-  </Field>
+  <!--<Field id="updaterEmailsEnabled" type="checkbox" defaultValue="false" tooltip="Enables (disables) email notifications.">-->
+    <!--<Label/>-->
+    <!--<Description>Enable update notifications</Description>-->
+  <!--</Field>-->
+  <!--<Field id="updaterEmail" type="textfield" tooltip="Please enter the email address to receive notifications of updates to the plugin.">-->
+    <!--<Label>Email address:</Label>-->
+  <!--</Field>-->
+
+  <Template file="template_notifications.xml" />
+
   <Field id="space04" type="label">
     <Label/>
   </Field>
-  <Field id="space05" type="label" alignText="right">
+  <Field id="space05a" type="label" alignText="right">
     <Label>Debug Settings:</Label>
   </Field>
   <Field id="separator02" type="separator"/>
