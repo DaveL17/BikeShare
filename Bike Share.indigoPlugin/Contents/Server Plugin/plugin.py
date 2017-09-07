@@ -20,7 +20,7 @@ community forums.
 # TODO: allow each device to update independently.
 
 import datetime as dt
-import pydevd
+# import pydevd
 import socket
 import sys
 import time
@@ -40,7 +40,7 @@ __build__     = ""
 __copyright__ = 'Copyright 2017 DaveL17'
 __license__   = "MIT"
 __title__     = 'Bike Share Plugin for Indigo Home Control'
-__version__   = '1.0.03'
+__version__   = '1.0.04'
 
 kDefaultPluginPrefs = {
     u'bikeSharingService': "",
@@ -71,8 +71,7 @@ class Plugin(indigo.PluginBase):
         self.debugLevel           = self.pluginPrefs.get('showDebugLevel', "Low")
         self.downloadInterval     = int(self.pluginPrefs.get('downloadInterval', 900))
         self.masterTriggerDict    = {}
-        updater_url = "https://davel17.github.io/BikeShare/bikeShare_version.html"
-        self.updater              = indigoPluginUpdateChecker.updateChecker(self, updater_url)
+        self.updater              = indigoPluginUpdateChecker.updateChecker(self, "http://davel17.github.io/BikeShare/bikeShare_version.html")
         self.updaterEmail         = self.pluginPrefs.get('updaterEmail', "")
         self.updaterEmailsEnabled = self.pluginPrefs.get(u"updaterEmailsEnabled", "false")
 
@@ -210,7 +209,7 @@ class Plugin(indigo.PluginBase):
         self.debug            = self.pluginPrefs.get('showDebugInfo', False)
         self.debugLevel       = self.pluginPrefs.get('showDebugLevel', "Low")
         self.downloadInterval = int(self.pluginPrefs.get('downloadInterval', 900))
-        self.updater          = indigoPluginUpdateChecker.updateChecker(self, "https://dl.dropboxusercontent.com/u/2796881/bikeShare_version.html")
+        self.updater          = indigoPluginUpdateChecker.updateChecker(self, "http://davel17.github.io/BikeShare/bikeShare_version.html")
         self.updaterEmail     = self.pluginPrefs.get('updaterEmail', "")
 
     def getBikeData(self):

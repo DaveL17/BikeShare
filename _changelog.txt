@@ -1,11 +1,18 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v1.0.04
+- Standardizes plugin menu item styles. Menu items with an elipsis (...)
+  denotes that a dialog box will open. Menu items without an elipsis will take
+  immediate action.
+- Fixed bug related to version control for "Check for Plugin Updates" menu
+  action.
+
 v1.0.03
 - Stylistic changes to Indigo Plugin Update Checker module.
 - Improved exception logging.
 - Code simplification.
 - Adds remote debugging capability.
-- Move updater config to template.
+- Moves updater config to template.
 
 v1.0.02
 - Adds trigger to report when a station is not in service.
