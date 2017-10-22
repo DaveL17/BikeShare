@@ -7,7 +7,7 @@
     <Label/>
   </Field>
   <Field id="space01" type="label" alignText="right">
-    <Label>Plugin Settings:</Label>
+    <Label>Plugin Settings</Label>
   </Field>
   <Field id="separator00" type="separator"/>
   <Field id="bikeSharingService" type="menu" defaultValue="" tooltip="Please select your bike sharing service.">
@@ -38,49 +38,41 @@
       <Option value="86395">1 Day</Option>
     </List>
   </Field>
-  <Field id="space02" type="label">
-    <Label/>
-  </Field>
-  <Field id="space03" type="label" alignText="right">
-    <Label>Plugin Update Notifications (optional):</Label>
-  </Field>
-  <Field id="separator01" type="separator"/>
-  <!--<Field id="updaterEmailsEnabled" type="checkbox" defaultValue="false" tooltip="Enables (disables) email notifications.">-->
-    <!--<Label/>-->
-    <!--<Description>Enable update notifications</Description>-->
-  <!--</Field>-->
-  <!--<Field id="updaterEmail" type="textfield" tooltip="Please enter the email address to receive notifications of updates to the plugin.">-->
-    <!--<Label>Email address:</Label>-->
-  <!--</Field>-->
 
-  <Template file="template_notifications.xml" />
+  <!-- Notifications Template -->
+  <Template file="DLFramework/template_notifications.xml" />
 
   <Field id="space04" type="label">
     <Label/>
   </Field>
   <Field id="space05a" type="label" alignText="right">
-    <Label>Debug Settings:</Label>
+    <Label>Debug Settings</Label>
   </Field>
-  <Field id="separator02" type="separator"/>
-  <Field id="showDebugInfo" type="checkbox" tooltip="Enabling will result in verbose logging.">
+  <Field id="separator03" type="separator"/>
+  <Field id="showDebugSettings" type="checkbox" tooltip="Check to display debug settings.">
+    <Label>Display Settings:</Label>
+    <Description/>
+  </Field>
+  <Field id="showDebugInfo" type="checkbox" visibleBindingId="showDebugSettings" visibleBindingValue="true" tooltip="Enabling will result in verbose logging.">
     <Label> </Label>
-    <Description>Enable/Disable</Description>
+    <Description>Enable/Disable Debug Logging</Description>
   </Field>
-  <Field id="showDebugLevel" type="menu" defaultValue="Low" visibleBindingId="showDebugInfo" visibleBindingValue="true"
-         tooltip="Controls the amount of debug information written to the log.">
+  <Field id="showDebugLevel" type="menu" defaultValue="Low" visibleBindingId="showDebugSettings" visibleBindingValue="true"
+         alignWithControl="True" tooltip="Controls the amount of debug information written to the log.">
     <Label>Debug level:</Label>
     <Description/>
     <List>
-      <Option value="Low">Low</Option>
-      <Option value="Medium">Medium</Option>
-      <Option value="High">High</Option>
+      <Option value="1">Low</Option>
+      <Option value="2">Medium</Option>
+      <Option value="3">High</Option>
     </List>
   </Field>
-  <Field id="space06" type="label" fontSize="small" visibleBindingId="showDebugInfo" visibleBindingValue="true">
-	<Label>Turn on debugging only when needed. Be careful when posting the output to the forums or other public places as it could expose sensitive information.
-
-  Low = Minimal debugging.
-  Medium = All debug logging except sensitive information.
-  High = May contain sensitive information.</Label>
+  <Field id="space06" type="label" fontSize="small" visibleBindingId="showDebugSettings" visibleBindingValue="true" alignWithControl="True">
+	<Label>Turn on debugging only when needed. Be careful when posting the output to the forums or other public places as it could expose sensitive information.</Label>
+  </Field>
+  <Field id="space07" type="label" fontSize="mini" visibleBindingId="showDebugSettings" visibleBindingValue="true" alignWithControl="True">
+	<Label>Low - Minimal debugging.
+Medium - All debug logging except sensitive information.
+High - May contain sensitive information.</Label>
   </Field>
 </PluginConfig>

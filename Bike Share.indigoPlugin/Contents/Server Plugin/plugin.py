@@ -17,36 +17,51 @@ please feel free to post to the Bike Share Plugin forum on the Indigo
 community forums.
 """
 
+# =================================== TO DO ===================================
+
 # TODO: allow each device to update independently.
 
+# ================================== IMPORTS ==================================
+
+# Built-in modules
 import datetime as dt
-# import pydevd
+import simplejson
 import socket
 import sys
 import time
 import urllib2
 
-import simplejson
-
-import indigoPluginUpdateChecker
-
+# Third-party modules
+from DLFramework import indigoPluginUpdateChecker
 try:
     import indigo
-except:
+except ImportError:
     pass
 
-__author__    = "DaveL17"
-__build__     = ""
-__copyright__ = 'Copyright 2017 DaveL17'
-__license__   = "MIT"
+try:
+    import pydevd
+except ImportError:
+    pass
+
+# My modules
+import DLFramework as dlf
+
+# =================================== HEADER ==================================
+
+__author__    = dlf.DLFramework.__author__
+__copyright__ = dlf.DLFramework.__copyright__
+__license__   = dlf.DLFramework.__license__
+__build__     = dlf.DLFramework.__build__
 __title__     = 'Bike Share Plugin for Indigo Home Control'
-__version__   = '1.0.04'
+__version__   = '1.0.05'
+
+# =============================================================================
 
 kDefaultPluginPrefs = {
     u'bikeSharingService': "",
     u'downloadInterval'    : 900,    # Frequency of updates.
     u'showDebugInfo'       : False,  # Verbose debug logging?
-    u'showDebugLevel'      : "Low",  # Low, Medium or High debug output.
+    u'showDebugLevel'      : "1",    # Low (1), Medium (2) or High (3) debug output.
     u'updaterEmail'        : "",     # Email to notify of plugin updates.
     u'updaterEmailsEnabled': False   # Notification of plugin updates wanted.
     }
@@ -56,26 +71,28 @@ class Plugin(indigo.PluginBase):
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
 
-        indigo.server.log(u"")
-        indigo.server.log(u"{0:=^130}".format(" Initializing New Plugin Session "))
-        indigo.server.log(u"{0:<31} {1}".format("Plugin name:", pluginDisplayName))
-        indigo.server.log(u"{0:<31} {1}".format("Plugin version:", pluginVersion))
-        indigo.server.log(u"{0:<31} {1}".format("Plugin ID:", pluginId))
-        indigo.server.log(u"{0:<31} {1}".format("Indigo version:", indigo.server.version))
-        indigo.server.log(u"{0:<31} {1}".format("Python version:", sys.version.replace('\n', '')))
-        indigo.server.log(u"{0:=^130}".format(""))
-
-        # pydevd.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)  # To enable remote PyCharm Debugging, uncomment this line.
-
         self.debug                = self.pluginPrefs.get('showDebugInfo', False)
-        self.debugLevel           = self.pluginPrefs.get('showDebugLevel', "Low")
+        self.debugLevel           = int(self.pluginPrefs.get('showDebugLevel', "1"))
         self.downloadInterval     = int(self.pluginPrefs.get('downloadInterval', 900))
         self.masterTriggerDict    = {}
         self.updater              = indigoPluginUpdateChecker.updateChecker(self, "http://davel17.github.io/BikeShare/bikeShare_version.html")
         self.updaterEmail         = self.pluginPrefs.get('updaterEmail', "")
         self.updaterEmailsEnabled = self.pluginPrefs.get(u"updaterEmailsEnabled", "false")
 
-        if self.pluginPrefs['showDebugLevel'] == "High":
+        # ====================== Initialize DLFramework =======================
+
+        self.dlf = dlf.DLFramework.Fogbert(self)
+
+        # Log pluginEnvironment information when plugin is first started
+        self.dlf.pluginEnvironment()
+
+        # Convert old debugLevel scale (low, medium, high) to new scale (1, 2, 3).
+        if not 0 < self.pluginPrefs.get('showDebugLevel', 1) <= 3:
+            self.pluginPrefs['showDebugLevel'] = self.dlf.convertDebugLevel(self.pluginPrefs['showDebugLevel'])
+
+        # =====================================================================
+
+        if self.pluginPrefs['showDebugLevel'] >= 3:
             self.debugLog(u"======================================================================")
             self.debugLog(u"Caution! Debug set to high. This results in a lot of output to the log")
             self.debugLog(u"======================================================================")
@@ -83,10 +100,15 @@ class Plugin(indigo.PluginBase):
         else:
             self.debugLog(u"Debug level set to: {0}".format(self.pluginPrefs.get('showDebugLevel', 1)))
 
-        if self.pluginPrefs['showDebugInfo'] and self.pluginPrefs['showDebugLevel'] == "High":
+        if self.pluginPrefs['showDebugInfo'] and self.pluginPrefs['showDebugLevel'] >= 3:
             self.debugLog(u"{0}".format(pluginPrefs))
         else:
             self.debugLog(u"Plugin preferences suppressed. Set debug level to [High] to write them to the log.")
+
+        # try:
+        #     pydevd.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)
+        # except:
+        #     pass
 
     def __del__(self):
         indigo.PluginBase.__del__(self)
@@ -155,7 +177,7 @@ class Plugin(indigo.PluginBase):
             self.debugLog(u"  User prefs saved.")
             self.debugLog(u"============ Plugin Prefs ============")
 
-            if self.pluginPrefs['showDebugInfo'] and self.pluginPrefs['showDebugLevel'] == "High":
+            if self.pluginPrefs['showDebugInfo'] and self.pluginPrefs['showDebugLevel'] >= 3:
                 self.debugLog(u"{0}".format(valuesDict))
             else:
                 self.debugLog(u"Plugin preferences suppressed. Set debug level to [High] to write them to the log.")
@@ -173,7 +195,7 @@ class Plugin(indigo.PluginBase):
         self.debugLog(u"validateDeviceConfigUi() method called.")
         self.debugLog(u"============ Device dict ============")
 
-        if self.pluginPrefs['showDebugInfo'] and self.pluginPrefs['showDebugLevel'] == "High":
+        if self.pluginPrefs['showDebugInfo'] and self.pluginPrefs['showDebugLevel'] >= 3:
             self.debugLog(u"{0}".format(valuesDict))
         else:
             self.debugLog(u"Device preferences suppressed. Set debug level to [High] to write them to the log.")
@@ -207,7 +229,6 @@ class Plugin(indigo.PluginBase):
         self.debugLog(u"getGlobalProps() method called.")
 
         self.debug            = self.pluginPrefs.get('showDebugInfo', False)
-        self.debugLevel       = self.pluginPrefs.get('showDebugLevel', "Low")
         self.downloadInterval = int(self.pluginPrefs.get('downloadInterval', 900))
         self.updater          = indigoPluginUpdateChecker.updateChecker(self, "http://davel17.github.io/BikeShare/bikeShare_version.html")
         self.updaterEmail     = self.pluginPrefs.get('updaterEmail', "")
@@ -366,7 +387,7 @@ class Plugin(indigo.PluginBase):
 
         try:
             parsed_simplejson = self.getBikeData()
-            if self.pluginPrefs['showDebugInfo'] and self.pluginPrefs['showDebugLevel'] == "High":
+            if self.pluginPrefs['showDebugInfo'] and self.pluginPrefs['showDebugLevel'] >= 3:
                 self.debugLog(u"{0}".format(parsed_simplejson))
             else:
                 self.debugLog(u"Device preferences suppressed. Set debug level to [High] to write JSON to the log.")

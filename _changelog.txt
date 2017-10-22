@@ -1,5 +1,10 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v1.0.05
+- Code consolidation using DLFramework.
+- Code consolidation using pluginConfig templates.
+- Adds note to documentation that the plugin requires Internet access in order to function.
+
 v1.0.04
 - Standardizes plugin menu item styles. Menu items with an elipsis (...)
   denotes that a dialog box will open. Menu items without an elipsis will take
