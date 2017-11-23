@@ -44,16 +44,16 @@ except ImportError:
     pass
 
 # My modules
-import DLFramework as dlf
+import DLFramework.DLFramework as Dave
 
 # =================================== HEADER ==================================
 
-__author__    = dlf.DLFramework.__author__
-__copyright__ = dlf.DLFramework.__copyright__
-__license__   = dlf.DLFramework.__license__
-__build__     = dlf.DLFramework.__build__
+__author__    = Dave.__author__
+__copyright__ = Dave.__copyright__
+__license__   = Dave.__license__
+__build__     = Dave.__build__
 __title__     = 'Bike Share Plugin for Indigo Home Control'
-__version__   = '1.0.05'
+__version__   = '1.0.06'
 
 # =============================================================================
 
@@ -81,14 +81,14 @@ class Plugin(indigo.PluginBase):
 
         # ====================== Initialize DLFramework =======================
 
-        self.dlf = dlf.DLFramework.Fogbert(self)
+        self.Fogbert = Dave.Fogbert(self)
 
         # Log pluginEnvironment information when plugin is first started
-        self.dlf.pluginEnvironment()
+        self.Fogbert.pluginEnvironment()
 
         # Convert old debugLevel scale (low, medium, high) to new scale (1, 2, 3).
         if not 0 < self.pluginPrefs.get('showDebugLevel', 1) <= 3:
-            self.pluginPrefs['showDebugLevel'] = self.dlf.convertDebugLevel(self.pluginPrefs['showDebugLevel'])
+            self.pluginPrefs['showDebugLevel'] = self.Fogbert.convertDebugLevel(self.pluginPrefs['showDebugLevel'])
 
         # =====================================================================
 

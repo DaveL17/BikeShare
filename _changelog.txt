@@ -1,5 +1,10 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v1.0.06
+- Moves documentation to Github wiki.
+- IPS Configuration
+- Fixes bug in info.plist (API reference)
+
 v1.0.05
 - Code consolidation using DLFramework.
 - Code consolidation using pluginConfig templates.

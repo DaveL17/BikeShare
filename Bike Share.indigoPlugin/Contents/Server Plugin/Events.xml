@@ -4,16 +4,18 @@
     <Event id="stationOutOfService">
         <Name>Station Out of Service</Name>
             <ConfigUI>
+
                 <Field id="outOfServiceLabel" type="label">
                     <Label>The Bike Share Plugin can fire a trigger if a service is reporting that a station is out of service.  Select the station that you want to monitor.</Label>
                 </Field>
-                <Field id="outOfServiceSpacer" type="label">
-                    <Label/>
-                </Field>
+
+                <Field id="outOfServiceSpacer" type="label"/>
+
                 <Field id="listOfStations" type="menu">
                     <Label>Station:</Label>
                     <List class="self" filter="" method="getStationList"/>
                 </Field>
+
             </ConfigUI>
     </Event>
 </Events>
