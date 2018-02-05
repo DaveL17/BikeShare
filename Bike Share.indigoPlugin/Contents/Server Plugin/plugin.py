@@ -53,7 +53,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'Bike Share Plugin for Indigo Home Control'
-__version__   = '1.0.06'
+__version__   = '1.0.07'
 
 # =============================================================================
 
@@ -75,7 +75,7 @@ class Plugin(indigo.PluginBase):
         self.debugLevel           = int(self.pluginPrefs.get('showDebugLevel', "1"))
         self.downloadInterval     = int(self.pluginPrefs.get('downloadInterval', 900))
         self.masterTriggerDict    = {}
-        self.updater              = indigoPluginUpdateChecker.updateChecker(self, "http://davel17.github.io/BikeShare/bikeShare_version.html")
+        self.updater              = indigoPluginUpdateChecker.updateChecker(self, "https://raw.githubusercontent.com/DaveL17/BikeShare/master/bikeShare_version.html")
         self.updaterEmail         = self.pluginPrefs.get('updaterEmail', "")
         self.updaterEmailsEnabled = self.pluginPrefs.get(u"updaterEmailsEnabled", "false")
 
