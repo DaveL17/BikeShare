@@ -130,11 +130,11 @@
 				<ControlPageLabel>Postal Code</ControlPageLabel>
 			</State>
 
-			<State id="renting">
-				<ValueType>Boolean</ValueType>
-				<TriggerLabel>Renting</TriggerLabel>
-				<ControlPageLabel>Renting</ControlPageLabel>
-			</State>
+			<!--<State id="renting">-->
+				<!--<ValueType>Boolean</ValueType>-->
+				<!--<TriggerLabel>Renting</TriggerLabel>-->
+				<!--<ControlPageLabel>Renting</ControlPageLabel>-->
+			<!--</State>-->
 
 			<State id="stAddress1">
 				<ValueType>String</ValueType>

@@ -47,46 +47,11 @@
     </List>
   </Field>
 
-  <!-- Notifications Template -->
-  <Template file="DLFramework/template_notifications.xml" />
+    <!-- Notifications Template -->
+    <Template file="DLFramework/template_notifications.xml"/>
 
-  <Field id="space04" type="label"/>
+    <!-- Debugging Template -->
+    <Template file="DLFramework/template_debugging.xml"/>
 
-  <Field id="space05a" type="label" alignText="right">
-    <Label>Debug Settings</Label>
-  </Field>
-
-  <Field id="separator03" type="separator"/>
-
-  <Field id="showDebugSettings" type="checkbox" tooltip="Check to display debug settings.">
-    <Label>Display Settings:</Label>
-    <Description/>
-  </Field>
-
-  <Field id="showDebugInfo" type="checkbox" visibleBindingId="showDebugSettings" visibleBindingValue="true" tooltip="Enabling will result in verbose logging.">
-    <Label> </Label>
-    <Description>Enable/Disable Debug Logging</Description>
-  </Field>
-
-  <Field id="showDebugLevel" type="menu" defaultValue="Low" visibleBindingId="showDebugSettings" visibleBindingValue="true"
-         alignWithControl="True" tooltip="Controls the amount of debug information written to the log.">
-    <Label>Debug level:</Label>
-    <Description/>
-    <List>
-      <Option value="1">Low</Option>
-      <Option value="2">Medium</Option>
-      <Option value="3">High</Option>
-    </List>
-  </Field>
-
-  <Field id="space06" type="label" fontSize="small" visibleBindingId="showDebugSettings" visibleBindingValue="true" alignWithControl="True">
-	<Label>Turn on debugging only when needed. Be careful when posting the output to the forums or other public places as it could expose sensitive information.</Label>
-  </Field>
-
-  <Field id="space07" type="label" fontSize="mini" visibleBindingId="showDebugSettings" visibleBindingValue="true" alignWithControl="True">
-	<Label>Low - Minimal debugging.
-Medium - All debug logging except sensitive information.
-High - May contain sensitive information.</Label>
-  </Field>
 
 </PluginConfig>
