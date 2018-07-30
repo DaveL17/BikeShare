@@ -13,7 +13,7 @@
 
                 <Field id="listOfStations" type="menu">
                     <Label>Station:</Label>
-                    <List class="self" filter="" method="getStationList"/>
+                    <List class="self" filter="" method="get_station_list"/>
                 </Field>
 
             </ConfigUI>

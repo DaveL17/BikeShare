@@ -1,14 +1,14 @@
 <?xml version="1.0"?>
 <MenuItems>
 
-    <MenuItem id="commsKillAll">
+    <MenuItem id="comms_kill_all">
         <Name>Disable All Devices</Name>
-        <CallbackMethod>commsKillAll</CallbackMethod>
+        <CallbackMethod>comms_kill_all</CallbackMethod>
     </MenuItem>
 
-    <MenuItem id="commsUnkillAll">
+    <MenuItem id="comms_unkill_all">
         <Name>Enable All Devices</Name>
-        <CallbackMethod>commsUnkillAll</CallbackMethod>
+        <CallbackMethod>comms_unkill_all</CallbackMethod>
     </MenuItem>
 
     <MenuItem id="titleSeparator" type="separator"/>
@@ -18,9 +18,9 @@
     	<CallbackMethod>checkVersionNow</CallbackMethod>
     </MenuItem>
 
-    <MenuItem id="refreshBikeData">
+    <MenuItem id="refresh_bike_data">
     	<Name>Refresh Data Now</Name>
-    	<CallbackMethod>refreshBikeData</CallbackMethod>
+    	<CallbackMethod>refresh_bike_data</CallbackMethod>
     </MenuItem>
 
 </MenuItems>

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <Actions>
 	<SupportURL>http://forums.indigodomo.com/viewforum.php?f=158</SupportURL>
-	<Action id="refreshBikeData">
+	<Action id="refresh_bike_data">
 		<Name>Refresh Bike Data</Name>
-		<CallbackMethod>refreshBikeAction</CallbackMethod>
+		<CallbackMethod>refresh_bike_action</CallbackMethod>
 	</Action>
 </Actions>

@@ -19,8 +19,6 @@ community forums.
 
 # =================================== TO DO ===================================
 
-# TODO: allow each device to update independently.
-
 # ================================== IMPORTS ==================================
 
 # Built-in modules
@@ -54,7 +52,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'Bike Share Plugin for Indigo Home Control'
-__version__   = '1.1.01'
+__version__   = '1.1.02'
 
 # =============================================================================
 
@@ -71,6 +69,9 @@ kDefaultPluginPrefs = {
 class Plugin(indigo.PluginBase):
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
+
+        self.pluginIsInitializing = True
+        self.pluginIsShuttingDown = False
 
         self.downloadInterval  = int(self.pluginPrefs.get('downloadInterval', 900))
         self.masterTriggerDict = {}
@@ -106,6 +107,8 @@ class Plugin(indigo.PluginBase):
         #     pydevd.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)
         # except:
         #     pass
+
+        self.pluginIsInitializing = False
 
     def __del__(self):
         indigo.PluginBase.__del__(self)
@@ -167,15 +170,15 @@ class Plugin(indigo.PluginBase):
             while True:
 
                 self.updater.checkVersionPoll()
-                self.refreshBikeData()
-                self.processTriggers()
+                self.refresh_bike_data()
+                self.process_triggers()
                 self.sleep(int(self.pluginPrefs.get('downloadInterval', 900)))
 
         except self.StopThread:
             self.logger.debug(u"Stopping concurrent thread.")
 
     def shutdown(self):
-        pass
+        self.pluginIsShuttingDown = True
 
     def startup(self):
 
@@ -221,23 +224,18 @@ class Plugin(indigo.PluginBase):
     # ============================= BikeShare Methods ==============================
 
     def checkVersionNow(self):
-        """
-        Check to see if the user is running the most current version
-
-        The checkVersionNow method reaches out to check and see if the user has the
-        most current version of the plugin installed. This method is invoked when the
-        user specifically requests the check.
-
-        -----
-
-        """
+        """ Supports legacy installations """
         self.updater.checkVersionNow()
 
     def commsKillAll(self):
+        """ Supports legacy installations. """
+        self.comms_kill_all()
+
+    def comms_kill_all(self):
         """
         Disable all plugin devices in Indigo
 
-        commsKillAll() sets the enabled status of all plugin devices to false.
+        comms_kill_all() sets the enabled status of all plugin devices to false.
 
         -----
 
@@ -252,10 +250,14 @@ class Plugin(indigo.PluginBase):
                 self.logger.debug(u"Exception when trying to kill all comms. Line {1}: Error: {0}".format(sys.exc_traceback.tb_lineno, error))
 
     def commsUnkillAll(self):
+        """ Supports legacy installations. """
+        self.comms_unkill_all()
+
+    def comms_unkill_all(self):
         """
         Enable all plugin devices in Indigo
 
-        commsUnkillAll() sets the enabled status of all plugin devices to true.
+        comms_unkill_all() sets the enabled status of all plugin devices to true.
 
         -----
 
@@ -269,11 +271,11 @@ class Plugin(indigo.PluginBase):
             except Exception as error:
                 self.logger.debug(u"Exception when trying to unkill all comms. Line: {1} Error: {0}".format(sys.exc_traceback.tb_lineno, error))
 
-    def getBikeData(self):
+    def get_bike_data(self):
         """
         Download the necessary JSON data from the bike sharing service
 
-        The getBikeData action reaches out to the bike share server and downloads the
+        The get_bike_data action reaches out to the bike share server and downloads the
         JSON needed data.
 
         -----
@@ -316,11 +318,11 @@ class Plugin(indigo.PluginBase):
 
         return parsed_simplejson
 
-    def getGlobalProps(self, dev):
+    def get_global_props(self, dev):
         """
         Update global device props
 
-        The getGlobalProps method sets up global values for each device as we iterate
+        The get_global_props method sets up global values for each device as we iterate
         through them (as they may have changed.)
 
         -----
@@ -332,11 +334,11 @@ class Plugin(indigo.PluginBase):
         self.updater          = indigoPluginUpdateChecker.updateChecker(self, "http://davel17.github.io/BikeShare/bikeShare_version.html")
         self.updaterEmail     = self.pluginPrefs.get('updaterEmail', "")
 
-    def getStationList(self, filter="", typeId=0, valuesDict=None, targetId=0):
+    def get_station_list(self, filter="", typeId=0, valuesDict=None, targetId=0):
         """
         Create a list of bike sharing stations for dropdown menus
 
-        The getStationList() method generates a sorted list of station names for use in
+        The get_station_list() method generates a sorted list of station names for use in
         device config dialogs.
 
         -----
@@ -348,15 +350,15 @@ class Plugin(indigo.PluginBase):
         :return list:
 
         """
-        parsed_simplejson = self.getBikeData()
+        parsed_simplejson = self.get_bike_data()
 
         return sorted([dock['stationName'] for dock in parsed_simplejson['stationBeanList']])
 
-    def parseBikeData(self, dev, parsed_simplejson):
+    def parse_bike_data(self, dev, parsed_simplejson):
         """
         Parse bike data for saving to custom device states
 
-        The parseBikeData() method takes the JSON data (contained within
+        The parse_bike_data() method takes the JSON data (contained within
         'parsed_simplejson' variable) and assigns values to relevant device states. In
         instances where the service provides a null string value, the plugin assigns
         the value of "Not provided." to alert the user to that fact.
@@ -432,11 +434,11 @@ class Plugin(indigo.PluginBase):
         dev.updateStatesOnServer(states_list)
         return
 
-    def processTriggers(self):
+    def process_triggers(self):
         """
         Process plugin triggers
 
-        The processTriggers method will examine the statusValue state of each
+        The process_triggers method will examine the statusValue state of each
         device, determine whether there is a trigger for any stations reported as not
         in service, and fire the corresponding trigger.
 
@@ -462,10 +464,14 @@ class Plugin(indigo.PluginBase):
             pass
 
     def refreshBikeAction(self, valuesDict):
+        """ Supports legacy installations. """
+        self.refresh_bike_action(valuesDict)
+
+    def refresh_bike_action(self, valuesDict):
         """
         Refresh bike data based on call from Indigo Action item
 
-        The refreshBikeAction method is used to trigger a data refresh cycle (get it?)
+        The refresh_bike_action method is used to trigger a data refresh cycle (get it?)
         when requested by the user through an Indigo action.
 
         -----
@@ -474,9 +480,9 @@ class Plugin(indigo.PluginBase):
 
         """
 
-        self.refreshBikeData()
+        self.refresh_bike_data()
 
-    def refreshBikeData(self):
+    def refresh_bike_data(self):
         """
         Refresh bike data based on a call from Indigo Plugin menu
 
@@ -490,7 +496,7 @@ class Plugin(indigo.PluginBase):
         """
 
         try:
-            parsed_simplejson = self.getBikeData()
+            parsed_simplejson = self.get_bike_data()
             states_list       = []
 
             self.logger.debug(u"{0}".format(parsed_simplejson))
@@ -507,11 +513,11 @@ class Plugin(indigo.PluginBase):
                     self.sleep(60)
 
                 elif dev.enabled:
-                    self.getGlobalProps(dev)
+                    self.get_global_props(dev)
 
                     try:
                         if parsed_simplejson != {}:
-                            self.parseBikeData(dev, parsed_simplejson)
+                            self.parse_bike_data(dev, parsed_simplejson)
 
                             if dev.states['statusValue'] == 'In Service':
                                 states_list.append({'key': 'onOffState', 'value': False, 'uiValue': u"{0}".format(dev.states['availableBikes'])})
