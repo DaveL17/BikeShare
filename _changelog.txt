@@ -1,7 +1,7 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
 v1.1.02
-- Code refinements.
+- Fixes bug in plugin menu item to check for latest version.
 
 v1.1.01
 - Updates to Indigo API 2.0 (Indigo 7 now required).

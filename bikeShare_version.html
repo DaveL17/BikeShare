@@ -1,16 +1,8 @@
-Version: 1.1.01
+Version: 1.1.02
 EmailSubject: Bike Share Indigo Plugin - Update Available
 EmailBody: The Bike Share Indigo Plugin you are using has been updated.
 
-v1.1.01
-- Updates to Indigo API 2.0 (Indigo 7 now required).
-- Converts testStation device state from string to boolean True/False.
-- Refactors 'dataAge' and 'executionTime' device states.
-  . 'dataAge' now keyed to the last time the bike dock station communicated
-    with the bike sharing service.
-  . 'executionTime' now keyed to the last time the Indigo plugin communicated
-    with the bike sharing service.
-- Removes legacy device state 'renting'. Users should use the state 'isRenting'.
+- Fixes bug in plugin menu item to check for latest version.
 
 As always, if something doesn't seem quite right, please let me know.
 
