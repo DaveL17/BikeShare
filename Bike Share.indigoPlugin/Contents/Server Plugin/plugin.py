@@ -331,7 +331,7 @@ class Plugin(indigo.PluginBase):
         """
 
         self.downloadInterval = int(self.pluginPrefs.get('downloadInterval', 900))
-        self.updater          = indigoPluginUpdateChecker.updateChecker(self, "http://davel17.github.io/BikeShare/bikeShare_version.html")
+        self.updater          = indigoPluginUpdateChecker.updateChecker(self, "https://davel17.github.io/BikeShare/bikeShare_version.html")
         self.updaterEmail     = self.pluginPrefs.get('updaterEmail', "")
 
     def get_station_list(self, filter="", typeId=0, valuesDict=None, targetId=0):
