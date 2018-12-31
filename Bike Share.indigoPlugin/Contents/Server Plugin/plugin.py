@@ -19,6 +19,8 @@ community forums.
 
 # =================================== TO DO ===================================
 
+# TODO: add feature to only check during hours
+
 # ================================== IMPORTS ==================================
 
 # Built-in modules
@@ -52,7 +54,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'Bike Share Plugin for Indigo Home Control'
-__version__   = '1.1.02'
+__version__   = '1.1.03'
 
 # =============================================================================
 
@@ -61,8 +63,6 @@ kDefaultPluginPrefs = {
     u'downloadInterval'    : 900,    # Frequency of updates.
     u'showDebugInfo'       : False,  # Verbose debug logging?
     u'showDebugLevel'      : "30",   # Default logging level
-    u'updaterEmail'        : "",     # Email to notify of plugin updates.
-    u'updaterEmailsEnabled': False   # Notification of plugin updates wanted.
     }
 
 
@@ -75,12 +75,6 @@ class Plugin(indigo.PluginBase):
 
         self.downloadInterval  = int(self.pluginPrefs.get('downloadInterval', 900))
         self.masterTriggerDict = {}
-
-        # =========================== Plugin Update Checker ============================
-        self.updaterEmail         = self.pluginPrefs.get('updaterEmail', "")
-        self.updaterEmailsEnabled = self.pluginPrefs.get("updaterEmailsEnabled", "false")
-        updater_url               = "https://raw.githubusercontent.com/DaveL17/BikeShare/master/bikeShare_version.html"
-        self.updater              = indigoPluginUpdateChecker.updateChecker(self, updater_url)
 
         # ================================= Debugging ==================================
         self.plugin_file_handler.setFormatter(logging.Formatter('%(asctime)s.%(msecs)03d\t%(levelname)-10s\t%(name)s.%(funcName)-28s %(msg)s', datefmt='%Y-%m-%d %H:%M:%S'))
@@ -113,34 +107,32 @@ class Plugin(indigo.PluginBase):
     def __del__(self):
         indigo.PluginBase.__del__(self)
 
+    # =============================================================================
     # =============================== Indigo Methods ===============================
-
+    # =============================================================================
     def actionControlDevice(self, actionId):
+
         indigo.server.log(u"\n{0}".format(actionId))
 
+    # =============================================================================
     def closedPrefsConfigUi(self, valuesDict, userCancelled):
-
-        if userCancelled:
-            self.logger.debug(u"  User prefs dialog cancelled.")
 
         if not userCancelled:
             if self.debugLevel != int(valuesDict['showDebugLevel']):
                 self.indigo_log_handler.setLevel(int(valuesDict['showDebugLevel']))
 
-            self.logger.debug(u"  User prefs saved.")
-            self.logger.debug(u"Plugin prefs: {0}".format(valuesDict))
-
+    # =============================================================================
     def deviceStartComm(self, dev):
 
-        self.logger.debug(u"Starting Bike Share device: {0}".format(dev.name))
         dev.updateStateOnServer('onOffState', value=False, uiValue=u"Enabled")
 
+    # =============================================================================
     def deviceStopComm(self, dev):
 
-        self.logger.debug(u"Stopping Bike Share device: {0}".format(dev.name))
         dev.updateStateOnServer('onOffState', value=False, uiValue=u"Disabled")
         dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 
+    # =============================================================================
     def didDeviceCommPropertyChange(self, origDev, newDev):
 
         # if origDev.pluginProps['address'] != newDev.pluginProps['address']:
@@ -148,19 +140,21 @@ class Plugin(indigo.PluginBase):
 
         return False
 
+    # =============================================================================
     def getPrefsConfigUiValues(self):
 
         plugin_prefs = self.pluginPrefs
 
         try:
-            _ = int(plugin_prefs.get('showDebugLevel', "30"))
-            if _ < 4:
-                plugin_prefs = '30'
+            if int(plugin_prefs.get('showDebugLevel', "30")) < 4:
+                plugin_prefs['showDebugLevel'] = '30'
+
         except ValueError:
             plugin_prefs['showDebugLevel'] = '30'
 
         return plugin_prefs
 
+    # =============================================================================
     def runConcurrentThread(self):
 
         self.logger.debug(u"runConcurrentThread initiated. Sleeping for 5 seconds to allow the Indigo Server to finish.")
@@ -168,69 +162,59 @@ class Plugin(indigo.PluginBase):
 
         try:
             while True:
-
-                self.updater.checkVersionPoll()
+                self.downloadInterval = int(self.pluginPrefs.get('downloadInterval', 900))
                 self.refresh_bike_data()
                 self.process_triggers()
-                self.sleep(int(self.pluginPrefs.get('downloadInterval', 900)))
+                self.sleep(self.downloadInterval)
 
         except self.StopThread:
             self.logger.debug(u"Stopping concurrent thread.")
 
+    # =============================================================================
     def shutdown(self):
+
         self.pluginIsShuttingDown = True
 
+    # =============================================================================
     def startup(self):
 
-        try:
-            self.updater.checkVersionPoll()
-        except Exception as error:
-            self.logger.critical(u"Update checker error: Line: {0} Error: {1}.".format(sys.exc_traceback.tb_lineno, error))
+        pass
 
+    # =============================================================================
     def triggerStartProcessing(self, trigger):
 
         self.masterTriggerDict[trigger.pluginProps['listOfStations']] = trigger.id
 
+    # =============================================================================
     def triggerStopProcessing(self, trigger):
 
         pass
 
+    # =============================================================================
     def validatePrefsConfigUi(self, valuesDict):
 
-        error_msg_dict = indigo.Dict()
-        update_email   = valuesDict['updaterEmail']
-        update_wanted  = valuesDict['updaterEmailsEnabled']
-
-        try:
-            if update_wanted and not update_email:
-                error_msg_dict['updaterEmail'] = u"If you want to be notified of updates, you must supply an email address."
-                error_msg_dict['showAlertText'] = u"Notifications require a valid email address."
-                return False, valuesDict, error_msg_dict
-            elif update_wanted and "@" not in update_email:
-                error_msg_dict['updaterEmail'] = u"Valid email addresses have at least one @ symbol in them (foo@bar.com)."
-                error_msg_dict['showAlertText'] = u"Notifications require a valid email address."
-                return False, valuesDict, error_msg_dict
-        except:
-            pass
-
         return True, valuesDict
 
+    # =============================================================================
     def validateDeviceConfigUi(self, valuesDict, typeID, devId):
 
-        self.logger.debug(u"Device: {0}".format(valuesDict))
-
         return True, valuesDict
 
+    # =============================================================================
     # ============================= BikeShare Methods ==============================
-
-    def checkVersionNow(self):
-        """ Supports legacy installations """
-        self.updater.checkVersionNow()
-
+    # =============================================================================
     def commsKillAll(self):
-        """ Supports legacy installations. """
+        """
+        The commsKillAll() method has been deprecated.
+
+        Supports legacy installations.
+
+        -----
+
+        """
         self.comms_kill_all()
 
+    # =============================================================================
     def comms_kill_all(self):
         """
         Disable all plugin devices in Indigo
@@ -249,10 +233,19 @@ class Plugin(indigo.PluginBase):
             except Exception as error:
                 self.logger.debug(u"Exception when trying to kill all comms. Line {1}: Error: {0}".format(sys.exc_traceback.tb_lineno, error))
 
+    # =============================================================================
     def commsUnkillAll(self):
-        """ Supports legacy installations. """
+        """
+        The commsUnkillAll() method has been deprecated.
+
+        Supports legacy installations.
+
+        -----
+
+        """
         self.comms_unkill_all()
 
+    # =============================================================================
     def comms_unkill_all(self):
         """
         Enable all plugin devices in Indigo
@@ -271,6 +264,31 @@ class Plugin(indigo.PluginBase):
             except Exception as error:
                 self.logger.debug(u"Exception when trying to unkill all comms. Line: {1} Error: {0}".format(sys.exc_traceback.tb_lineno, error))
 
+    # =============================================================================
+    def dump_bike_data(self):
+        """
+
+        -----
+
+        :return:
+        """
+
+        debug_level = int(self.pluginPrefs.get('showDebugLevel', "30"))
+        time_stamp        = dt.datetime.now().strftime("%Y-%m-%d %H.%M")
+        file_name         = u"{0}/com.fogbert.indigoplugin.bikeShare/{1} Bike Share data.txt".format(indigo.server.getLogsFolderPath(), time_stamp)
+
+        parsed_simplejson = self.get_bike_data()
+
+        with open(file_name, 'w') as out_file:
+            out_file.write(u"Bike Share Plugin Data\n")
+            out_file.write(u"{0}\n".format(time_stamp))
+            out_file.write(u"{0}".format(parsed_simplejson))
+
+        self.indigo_log_handler.setLevel(20)
+        self.logger.info(u"Data written to {0}".format(file_name))
+        self.indigo_log_handler.setLevel(debug_level)
+
+    # =============================================================================
     def get_bike_data(self):
         """
         Download the necessary JSON data from the bike sharing service
@@ -299,12 +317,12 @@ class Plugin(indigo.PluginBase):
         # ======================== Communication Error Handling ========================
         except urllib2.HTTPError as error:
             parsed_simplejson = {}
-            self.logger.critical(u"Unable to contact sharing service. Will continue to try.")
+            self.logger.warning(u"Unable to contact sharing service. Will continue to try.")
             self.logger.debug(u"HTTPError - {0}".format(error))
 
         except urllib2.URLError as error:
             parsed_simplejson = {}
-            self.logger.critical(u"Unable to contact sharing service. Will continue to try.")
+            self.logger.warning(u"Unable to contact sharing service. Will continue to try.")
             self.logger.debug(u"URLError - {0}".format(error))
 
         except Exception as error:
@@ -318,22 +336,7 @@ class Plugin(indigo.PluginBase):
 
         return parsed_simplejson
 
-    def get_global_props(self, dev):
-        """
-        Update global device props
-
-        The get_global_props method sets up global values for each device as we iterate
-        through them (as they may have changed.)
-
-        -----
-
-        :param indigo.device dev:
-        """
-
-        self.downloadInterval = int(self.pluginPrefs.get('downloadInterval', 900))
-        self.updater          = indigoPluginUpdateChecker.updateChecker(self, "https://davel17.github.io/BikeShare/bikeShare_version.html")
-        self.updaterEmail     = self.pluginPrefs.get('updaterEmail', "")
-
+    # =============================================================================
     def get_station_list(self, filter="", typeId=0, valuesDict=None, targetId=0):
         """
         Create a list of bike sharing stations for dropdown menus
@@ -354,6 +357,7 @@ class Plugin(indigo.PluginBase):
 
         return sorted([dock['stationName'] for dock in parsed_simplejson['stationBeanList']])
 
+    # =============================================================================
     def parse_bike_data(self, dev, parsed_simplejson):
         """
         Parse bike data for saving to custom device states
@@ -434,6 +438,7 @@ class Plugin(indigo.PluginBase):
         dev.updateStatesOnServer(states_list)
         return
 
+    # =============================================================================
     def process_triggers(self):
         """
         Process plugin triggers
@@ -463,10 +468,21 @@ class Plugin(indigo.PluginBase):
         except KeyError:
             pass
 
+    # =============================================================================
     def refreshBikeAction(self, valuesDict):
-        """ Supports legacy installations. """
+        """
+        The refreshBikeAction() method has been deprecated.
+
+        Supports legacy installations.
+
+        -----
+
+        :param valuesDict:
+        """
+
         self.refresh_bike_action(valuesDict)
 
+    # =============================================================================
     def refresh_bike_action(self, valuesDict):
         """
         Refresh bike data based on call from Indigo Action item
@@ -479,9 +495,9 @@ class Plugin(indigo.PluginBase):
         :param indigo.dict valuesDict:
 
         """
-
         self.refresh_bike_data()
 
+    # =============================================================================
     def refresh_bike_data(self):
         """
         Refresh bike data based on a call from Indigo Plugin menu
@@ -499,21 +515,14 @@ class Plugin(indigo.PluginBase):
             parsed_simplejson = self.get_bike_data()
             states_list       = []
 
-            self.logger.debug(u"{0}".format(parsed_simplejson))
-
             for dev in indigo.devices.itervalues("self"):
                 dev.stateListOrDisplayStateIdChanged()
 
-                if not dev:
-                    indigo.server.log(u"There aren't any devices to poll yet. Sleeping.")
-                    self.sleep(self.downloadInterval)
-
-                elif not dev.configured:
+                if not dev.configured:
                     indigo.server.log(u"[{0}] Skipping device because it is not fully configured.".format(dev.name))
                     self.sleep(60)
 
                 elif dev.enabled:
-                    self.get_global_props(dev)
 
                     try:
                         if parsed_simplejson != {}:
@@ -540,9 +549,10 @@ class Plugin(indigo.PluginBase):
 
                 dev.updateStatesOnServer(states_list)
 
-            self.logger.debug(u"Data refreshed.")
+            self.logger.info(u"Data refreshed.")
             parsed_simplejson = {}
 
         except Exception as error:
-            self.logger.critical(u"There was a problem refreshing the data.  Will try on next cycle.")
-            self.logger.critical(u"Exception Line: {0} Error: {1}.".format(sys.exc_traceback.tb_lineno, error))
+            self.logger.warning(u"There was a problem refreshing the data.  Will try on next cycle.")
+            self.logger.debug(u"Exception Line: {0} Error: {1}.".format(sys.exc_traceback.tb_lineno, error))
+    # =============================================================================

@@ -13,14 +13,14 @@
 
     <MenuItem id="titleSeparator" type="separator"/>
 
-    <MenuItem id="checkForUpdates">
-    	<Name>Check for Plugin Updates</Name>
-    	<CallbackMethod>checkVersionNow</CallbackMethod>
-    </MenuItem>
-
     <MenuItem id="refresh_bike_data">
     	<Name>Refresh Data Now</Name>
     	<CallbackMethod>refresh_bike_data</CallbackMethod>
+    </MenuItem>
+
+    <MenuItem id="dump_bike_data">
+    	<Name>Write Data to File</Name>
+    	<CallbackMethod>dump_bike_data</CallbackMethod>
     </MenuItem>
 
 </MenuItems>

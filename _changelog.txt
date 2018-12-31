@@ -1,5 +1,10 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v1.1.03
+- Adds Write Data to File option to plugin menu.
+- Removes plugin update notifications.
+- Code refinements.
+
 v1.1.02
 - Fixes bug in plugin menu item to check for latest version.
 
