@@ -1,5 +1,8 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v1.1.04
+- Changes Python lists to tuples where possible to improve performance.
+
 v1.1.03
 - Adds Write Data to File option to plugin menu.
 - Removes plugin update notifications.

@@ -54,7 +54,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'Bike Share Plugin for Indigo Home Control'
-__version__   = '1.1.03'
+__version__   = '1.1.04'
 
 # =============================================================================
 
@@ -380,25 +380,25 @@ class Plugin(indigo.PluginBase):
         for dock in parsed_simplejson['stationBeanList']:
             if dev.pluginProps['stationName'] == dock['stationName']:
 
-                for key in [
-                    'altitude',
-                    'availableBikes',
-                    'availableDocks',
-                    'city',
-                    'landMark',
-                    'lastCommunicationTime',
-                    'latitude',
-                    'location',
-                    'longitude',
-                    'postalCode',
-                    # 'renting',
-                    'stAddress1',
-                    'stAddress2',
-                    'stationName',
-                    'statusKey',
-                    'statusValue',
-                    'totalDocks',
-                ]:
+                for key in (
+                        'altitude',
+                        'availableBikes',
+                        'availableDocks',
+                        'city',
+                        'landMark',
+                        'lastCommunicationTime',
+                        'latitude',
+                        'location',
+                        'longitude',
+                        'postalCode',
+                        # 'renting',
+                        'stAddress1',
+                        'stAddress2',
+                        'stationName',
+                        'statusKey',
+                        'statusValue',
+                        'totalDocks',
+                ):
 
                     if key not in dock.keys() or dock[key] == "":
                         dock[key] = u"Not provided"
