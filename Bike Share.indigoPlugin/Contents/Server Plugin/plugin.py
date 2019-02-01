@@ -33,7 +33,6 @@ import sys
 import urllib2
 
 # Third-party modules
-from DLFramework import indigoPluginUpdateChecker
 try:
     import indigo
 except ImportError:
@@ -54,15 +53,15 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'Bike Share Plugin for Indigo Home Control'
-__version__   = '1.1.04'
+__version__   = '1.1.05'
 
 # =============================================================================
 
 kDefaultPluginPrefs = {
-    u'bikeSharingService': "",
-    u'downloadInterval'    : 900,    # Frequency of updates.
-    u'showDebugInfo'       : False,  # Verbose debug logging?
-    u'showDebugLevel'      : "30",   # Default logging level
+    u'bikeSharingService' : "",
+    u'downloadInterval'   : 895,    # Frequency of updates.
+    # u'showDebugInfo'      : False,  # Verbose debug logging?
+    u'showDebugLevel'     : "30",   # Default logging level
     }
 
 

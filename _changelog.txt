@@ -1,5 +1,9 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v1.1.05
+- Changes "En/Disable All Devices" to "En/Disable all Plugin Devices".
+- Updates kDefaultPluginPrefs
+
 v1.1.04
 - Changes Python lists to tuples where possible to improve performance.
 
