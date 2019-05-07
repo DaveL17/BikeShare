@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 <PluginConfig>
 
+  <SupportURL>https://github.com/DaveL17/BikeShare/wiki/configuration</SupportURL>
+
   <Field id="infoLabel00" type="label">
     <Label>Bikeshare Plugin</Label>
   </Field>

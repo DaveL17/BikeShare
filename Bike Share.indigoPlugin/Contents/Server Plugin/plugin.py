@@ -181,6 +181,12 @@ class Plugin(indigo.PluginBase):
             self.logger.debug(u"Stopping concurrent thread.")
 
     # =============================================================================
+    def sendDevicePing(self, dev_id=0, suppress_logging=False):
+
+        indigo.server.log(u"Bikeshare Plugin devices do not support the ping function.")
+        return {'result': 'Failure'}
+
+    # =============================================================================
     def shutdown(self):
 
         self.pluginIsShuttingDown = True
@@ -188,7 +194,8 @@ class Plugin(indigo.PluginBase):
     # =============================================================================
     def startup(self):
 
-        pass
+        # =========================== Audit Indigo Version ============================
+        self.Fogbert.audit_server_version(min_ver=7)
 
     # =============================================================================
     def triggerStartProcessing(self, trigger):

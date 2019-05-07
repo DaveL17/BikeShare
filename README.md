@@ -1,4 +1,5 @@
-![BikeShare Logo](https://github.com/DaveL17/BikeShare/wiki/img/img_BikeShareLogo.png)
+# ![Logo](https://github.com/DaveL17/BikeShare/wiki/img/img_BikeShareLogo.png)
+# ![shield](https://img.shields.io/github/release/DaveL17/BikeShare.svg)
 
 The BikeShare plugin allows users to create Indigo Home Control Server 
 devices representing Bike sharing service locations. Individual 

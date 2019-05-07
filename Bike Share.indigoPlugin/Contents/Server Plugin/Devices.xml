@@ -7,6 +7,7 @@
 		<Name>Bike Share Station</Name>
 		<ConfigUI>
 
+			<SupportURL>https://github.com/DaveL17/BikeShare/wiki/devices</SupportURL>
 			<Field id="space00" type="label">
 				<Label>Please select a bike station.</Label>
 			</Field>
