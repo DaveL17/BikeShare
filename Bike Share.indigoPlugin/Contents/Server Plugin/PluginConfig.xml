@@ -19,28 +19,28 @@
 
   <Field id="separator00" type="separator"/>
 
-  <Field id="bikeSharingService" type="menu" defaultValue="" tooltip="Please select your bike sharing service.">
-    <Label>Bike service:</Label>
+  <Field id="language" type="menu" defaultValue="en" tooltip="Please select the desired language (setting affects data only).">
+    <Label>Language:</Label>
     <List>
-      <Option value="">- Select One -</Option>
-      <Option value="https://www.we-cycle.org/pbsc/stations.php">Aspen - We Cycle</Option>
-      <Option value="http://www.bikechattanooga.com/stations/json">Chattanooga - Bike Chattanooga</Option>
-      <Option value="http://divvybikes.com/stations/json">Chicago - Divvy Bikes</Option>
-      <Option value="http://cogobikeshare.com/stations/json">Columbus - CoGo Bike Share</Option>
-      <Option value="http://www.citibikenyc.com/stations/json">New York - Citi Bike</Option>
-      <Option value="http://www.bayareabikeshare.com/stations/json">San Francisco - Bay Area BikeShare</Option>
-      <Option value="http://www.bikesharetoronto.com/stations/json">Toronto - Bike Share Toronto</Option>
+      <Option value="en">English*</Option>
+      <Option value="fr">French</Option>
+      <Option value="es">Spanish</Option>
     </List>
   </Field>
 
+  <Field id="bike_system" type="menu" defaultValue="" tooltip="Please select the desired bike system.">
+    <Label>System:</Label>
+      <List class="self" filter="" method="get_system_list" dynamicReload="true"/>
+  </Field>
+
   <Field id="downloadInterval" type="menu" defaultValue="895" tooltip="Please select the desired frequency for data downloads.">
-    <Label>Download interval:</Label>
+    <Label>Download Interval:</Label>
     <List>
       <Option value="25">30 Seconds</Option>
       <Option value="55">1 Minute</Option>
       <Option value="295">5 Minutes</Option>
       <Option value="595">10 Minutes</Option>
-      <Option value="895">15 Minutes</Option>
+      <Option value="895">15 Minutes*</Option>
       <Option value="1795">30 Minutes</Option>
       <Option value="3595">1 Hour</Option>
       <Option value="21595">6 Hours</Option>
@@ -49,7 +49,11 @@
     </List>
   </Field>
 
+  <Field id="notes" type="label" alignWithControl="true" fontSize="small">
+    <Label>A note about languages: Not all sharing services provide data in all languages. The Bike Share plugin provides whatever data is made available by the selected service.</Label>
+  </Field>
+
     <!-- Debugging Template -->
-    <Template file="DLFramework/template_debugging.xml"/>
+  <Template file="DLFramework/template_debugging.xml"/>
 
 </PluginConfig>

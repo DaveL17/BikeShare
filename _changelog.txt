@@ -1,5 +1,8 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v2.0.01
+- Complete rewrite of the plugin to use the standardized GBFS data sharing specification.
+
 v1.1.07
 - Ensures that the plugin is compatible with the Indigo server version.
 - Standardizes SupportURL behavior across all plugin functions.

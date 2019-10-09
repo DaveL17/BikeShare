@@ -20,17 +20,18 @@ community forums.
 # =================================== TO DO ===================================
 
 # TODO: add feature to only check during hours
+# TODO: move system choice from plugin config to device (then users can manage multiple systems). Note that this will make the plugin no longer backward compatible.
+#       update list of stations when system is selected in dev props.
+# TODO: What happens when a system goes away?
 
 # ================================== IMPORTS ==================================
 
 # Built-in modules
 import datetime as dt
-import dateutil.parser as dup
 import logging
-import simplejson
-import socket
+import pandas as pd
+import requests
 import sys
-import urllib2
 
 # Third-party modules
 try:
@@ -52,15 +53,14 @@ __author__    = Dave.__author__
 __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
-__title__     = 'Bike Share Plugin for Indigo Home Control'
-__version__   = '1.1.06'
+__title__     = 'Bike Share Plugin for Indigo'
+__version__   = '2.0.01'
 
 # =============================================================================
 
 kDefaultPluginPrefs = {
     u'bikeSharingService' : "",
     u'downloadInterval'   : 895,    # Frequency of updates.
-    # u'showDebugInfo'      : False,  # Verbose debug logging?
     u'showDebugLevel'     : "30",   # Default logging level
     }
 
@@ -69,11 +69,12 @@ class Plugin(indigo.PluginBase):
     def __init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs):
         indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
 
-        self.pluginIsInitializing = True
-        self.pluginIsShuttingDown = False
+        self.plugin_is_initializing = True
+        self.plugin_is_shutting_down = False
+        self.system_data = {}
 
-        self.downloadInterval  = int(self.pluginPrefs.get('downloadInterval', 900))
-        self.masterTriggerDict = {}
+        self.downloadInterval = int(self.pluginPrefs.get('downloadInterval', 900))
+        self.master_trigger_dict = {}
 
         # ================================= Debugging ==================================
         self.plugin_file_handler.setFormatter(logging.Formatter('%(asctime)s.%(msecs)03d\t%(levelname)-10s\t%(name)s.%(funcName)-28s %(msg)s', datefmt='%Y-%m-%d %H:%M:%S'))
@@ -101,7 +102,10 @@ class Plugin(indigo.PluginBase):
         # except:
         #     pass
 
-        self.pluginIsInitializing = False
+        # Update system data
+        self.get_bike_data()
+
+        self.plugin_is_initializing = False
 
     def __del__(self):
         indigo.PluginBase.__del__(self)
@@ -134,6 +138,7 @@ class Plugin(indigo.PluginBase):
     # =============================================================================
     def deviceStartComm(self, dev):
 
+        self.parse_bike_data(dev)
         dev.updateStateOnServer('onOffState', value=False, uiValue=u"Enabled")
 
     # =============================================================================
@@ -189,7 +194,7 @@ class Plugin(indigo.PluginBase):
     # =============================================================================
     def shutdown(self):
 
-        self.pluginIsShuttingDown = True
+        self.plugin_is_shutting_down = True
 
     # =============================================================================
     def startup(self):
@@ -200,7 +205,7 @@ class Plugin(indigo.PluginBase):
     # =============================================================================
     def triggerStartProcessing(self, trigger):
 
-        self.masterTriggerDict[trigger.pluginProps['listOfStations']] = trigger.id
+        self.master_trigger_dict[trigger.pluginProps['listOfStations']] = trigger.id
 
     # =============================================================================
     def triggerStopProcessing(self, trigger):
@@ -294,12 +299,10 @@ class Plugin(indigo.PluginBase):
         time_stamp        = dt.datetime.now().strftime("%Y-%m-%d %H.%M")
         file_name         = u"{0}/com.fogbert.indigoplugin.bikeShare/{1} Bike Share data.txt".format(indigo.server.getLogsFolderPath(), time_stamp)
 
-        parsed_simplejson = self.get_bike_data()
-
         with open(file_name, 'w') as out_file:
             out_file.write(u"Bike Share Plugin Data\n")
             out_file.write(u"{0}\n".format(time_stamp))
-            out_file.write(u"{0}".format(parsed_simplejson))
+            out_file.write(u"{0}".format(self.system_data))
 
         self.indigo_log_handler.setLevel(20)
         self.logger.info(u"Data written to {0}".format(file_name))
@@ -315,43 +318,57 @@ class Plugin(indigo.PluginBase):
 
         -----
 
-        :return dict parsed_simplejson:
+        :return dict self.system_data:
         """
+        self.system_data = {}
 
         try:
             # Get the selected service from the plugin config dict.
             # =================================================================
-            url = self.pluginPrefs.get('bikeSharingService')
+            lang = self.pluginPrefs.get('language')
+            auto_discovery_url = self.pluginPrefs.get('bike_system')
+            self.logger.debug(u"Auto-discovery URL: {0}".format(auto_discovery_url))
 
             # Go and get the data from the bike sharing service.
             # =================================================================
-            socket.setdefaulttimeout(15)
-            f = urllib2.urlopen(url)
-            simplejson_string = f.read()
-            parsed_simplejson = simplejson.loads(simplejson_string)
-            f.close()
+            r = requests.get(auto_discovery_url, timeout=15)
+            for feed in r.json()['data'][lang]['feeds']:
+                self.system_data[feed['name']] = requests.get(feed['url']).json()
+            return self.system_data
 
         # ======================== Communication Error Handling ========================
-        except urllib2.HTTPError as error:
-            parsed_simplejson = {}
-            self.logger.warning(u"Unable to contact sharing service. Will continue to try.")
-            self.logger.debug(u"HTTPError - {0}".format(error))
-
-        except urllib2.URLError as error:
-            parsed_simplejson = {}
-            self.logger.warning(u"Unable to contact sharing service. Will continue to try.")
-            self.logger.debug(u"URLError - {0}".format(error))
+        except requests.exceptions.ConnectionError:
+            self.logger.critical(u"Connection Error. Will attempt again later.")
 
         except Exception as error:
-            parsed_simplejson = {}
-            if "invalid literal for int() with base 16: ''" in error:
-                self.logger.warning(u"Congratulations! You have discovered a somewhat obscure bug in Python2.5. "
-                                    u"This problem should clear up on its own, but may come back periodically.")
+            self.logger.critical(u"Plugin exception. Line: {0} Error: {1}.".format(sys.exc_traceback.tb_lineno, error))
 
-            else:
-                self.logger.critical(u"Plugin exception. Line: {0} Error: {1}.".format(sys.exc_traceback.tb_lineno, error))
+    # =============================================================================
+    def get_system_list(self, filter="", typeId=0, valuesDict=None, targetId=0):
+        """
 
-        return parsed_simplejson
+        :param filter:
+        :param typeId:
+        :param valuesDict:
+        :param targetId:
+        :return:
+        """
+        # Download the latest systems list from GitHub and create a pandas dataframe.
+        df = pd.read_csv("https://raw.githubusercontent.com/NABSA/gbfs/master/systems.csv")
+
+        # Make minor changes to the provided data for proper display.
+        df['Name'] = [n.lstrip(" ") for n in df['Name']]
+
+        # Create a new field: Name (Location)
+        df['Combined Name'] = df['Name'] + " (" + df['Location'] + ")"
+
+        # Create a list of tuples for dropdown menu.
+        li = zip(list(df['Auto-Discovery URL']), list(df['Combined Name']))
+
+        # Log the number of available systems.
+        self.logger.debug(u"{0} bike sharing systems available.".format(len(li)))
+
+        return sorted(li, key=lambda tup: tup[1].lower())
 
     # =============================================================================
     def get_station_list(self, filter="", typeId=0, valuesDict=None, targetId=0):
@@ -370,75 +387,57 @@ class Plugin(indigo.PluginBase):
         :return list:
 
         """
-        parsed_simplejson = self.get_bike_data()
+        station_information = self.system_data['station_information']['data']['stations']
 
-        return sorted([dock['stationName'] for dock in parsed_simplejson['stationBeanList']])
+        return sorted([(key['station_id'], key['name']) for key in station_information], key=lambda x: x[-1])
 
     # =============================================================================
-    def parse_bike_data(self, dev, parsed_simplejson):
+    def parse_bike_data(self, dev):
         """
         Parse bike data for saving to custom device states
 
         The parse_bike_data() method takes the JSON data (contained within
-        'parsed_simplejson' variable) and assigns values to relevant device states. In
+        'self.system_data' variable) and assigns values to relevant device states. In
         instances where the service provides a null string value, the plugin assigns
         the value of "Not provided." to alert the user to that fact.
 
         -----
 
         :param indigo.device dev:
-        :param dict parsed_simplejson:
 
         """
 
         states_list = []
-        states_list.append({'key': 'executionTime', 'value': parsed_simplejson['executionTime']})
+        station_id = dev.pluginProps['stationName']
 
-        for dock in parsed_simplejson['stationBeanList']:
-            if dev.pluginProps['stationName'] == dock['stationName']:
+        # Station information
+        for station in self.system_data['station_information']['data']['stations']:
+            if station['station_id'] == station_id:
+                for key in ('capacity', 'lat', 'lon', 'name',):
+                    states_list.append({'key': key, 'value': station[key]})
 
-                for key in (
-                        'altitude',
-                        'availableBikes',
-                        'availableDocks',
-                        'city',
-                        'landMark',
-                        'lastCommunicationTime',
-                        'latitude',
-                        'location',
-                        'longitude',
-                        'postalCode',
-                        # 'renting',
-                        'stAddress1',
-                        'stAddress2',
-                        'stationName',
-                        'statusKey',
-                        'statusValue',
-                        'totalDocks',
-                ):
+        # Station Status
+        for station in self.system_data['station_status']['data']['stations']:
+            if station['station_id'] == station_id:
+                for key in ('is_renting', 'is_returning', 'num_bikes_available', 'num_bikes_disabled',
+                            'num_docks_available', 'num_docks_disabled', 'num_ebikes_available',):
 
-                    if key not in dock.keys() or dock[key] == "":
-                        dock[key] = u"Not provided"
-                    states_list.append({'key': key, 'value': dock[key], 'uiValue': u"{0}".format(dock[key])})
+                    # Coerce select entries to bool
+                    for _ in ('is_renting', 'is_returning'):
+                        if station[_] == 1:
+                            station[_] = True
+                        else:
+                            station[_] = False
 
-                if 'is_renting' not in dock.keys() or dock['is_renting'] == "":
-                    dock['is_renting'] = u"Not provided"
-                states_list.append({'key': 'isRenting', 'value': dock['is_renting'], 'uiValue': u"{0}".format(dock['is_renting'])})
+                    states_list.append({'key': key, 'value': station[key]})
 
-                if 'id' not in dock.keys() or dock['id'] == "":
-                    dock['id'] = u"Not provided"
-                states_list.append({'key': 'stationID', 'value': dock['id'], 'uiValue': u"{0}".format(dock['id'])})
-
-                # Convert ['Test Station'] string value to boolean. Assumes False.
-                if dock['testStation']:
-                    states_list.append({'key': 'testStation', 'value': True})
-                else:
-                    states_list.append({'key': 'testStation', 'value': False})
 
                 # ================================== Data Age ==================================
                 try:
+                    last_report = int(station['last_reported'])
+                    last_report_human = dt.datetime.fromtimestamp(last_report).strftime("%Y-%m-%d %H:%M:%S")
 
-                    diff_time = dt.datetime.now() - dup.parse(dock['lastCommunicationTime'])
+                    diff_time = dt.datetime.now() - dt.datetime.fromtimestamp(last_report)
 
                     # Sometimes the sharing service clock is ahead of the Indigo server clock. Since the
                     # result can't be negative by definition, let's make it zero and call it a day.
@@ -446,6 +445,8 @@ class Plugin(indigo.PluginBase):
                     if diff_time.total_seconds() < 0:
                         diff_time = 0
                     diff_time_str = u"{0}".format(dt.timedelta(seconds=diff_time.total_seconds()))
+
+                    states_list.append({'key': 'last_reported', 'value': last_report_human})
                     states_list.append({'key': 'dataAge', 'value': diff_time_str, 'uiValue': diff_time_str})
 
                 except Exception as e:
@@ -473,10 +474,10 @@ class Plugin(indigo.PluginBase):
 
                 station_name   = dev.states['stationName']
                 station_status = dev.states['statusValue']
-                if station_name in self.masterTriggerDict.keys():
+                if station_name in self.master_trigger_dict.keys():
 
                     if station_status != 'In Service':  # This relies on all services reporting status value of 'In Service' when things are normal.
-                        trigger_id = self.masterTriggerDict[station_name]
+                        trigger_id = self.master_trigger_dict[station_name]
 
                         if indigo.triggers[trigger_id].enabled:
                             indigo.trigger.execute(trigger_id)
@@ -529,8 +530,11 @@ class Plugin(indigo.PluginBase):
         """
 
         try:
-            parsed_simplejson = self.get_bike_data()
-            states_list       = []
+            states_list = []
+
+            # TODO: Ensures we only go get the data once during update.  If moved to supporting multiple services,
+            #       we will need to process all like devices as a group.
+            self.get_bike_data()
 
             for dev in indigo.devices.itervalues("self"):
                 dev.stateListOrDisplayStateIdChanged()
@@ -542,32 +546,30 @@ class Plugin(indigo.PluginBase):
                 elif dev.enabled:
 
                     try:
-                        if parsed_simplejson != {}:
-                            self.parse_bike_data(dev, parsed_simplejson)
+                        if self.system_data != {}:
+                            self.parse_bike_data(dev)
 
-                            if dev.states['statusValue'] == 'In Service':
-                                states_list.append({'key': 'onOffState', 'value': False, 'uiValue': u"{0}".format(dev.states['availableBikes'])})
+                            if dev.states['is_renting'] == 1:
+                                states_list.append({'key': 'onOffState', 'value': True, 'uiValue': u"{0}".format(dev.states['num_bikes_available'])})
                                 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
                             else:
-                                states_list.append({'key': 'onOffState', 'value': False, 'uiValue': u"{0}".format(dev.states['statusValue'])})
-                                dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+                                states_list.append({'key': 'onOffState', 'value': False, 'uiValue': u"Not Renting"})
+                                dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
-                        elif parsed_simplejson == {}:
+                        elif self.system_data == {}:
                             dev.setErrorStateOnServer(u"No Comm")
                             self.logger.debug(u"Comm error. Sleeping until next scheduled poll.")
                             dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
                     except Exception as error:
-                        states_list.append({'key': 'onOffState', 'value': False, 'uiValue': u"{0}".format(dev.states['availableBikes'])})
+                        states_list.append({'key': 'onOffState', 'value': False, 'uiValue': u"{0}".format(dev.states['num_bikes_available'])})
                         dev.setErrorStateOnServer(u"Error")
                         self.logger.debug(u"Exception Line: {0} Error: {1}.".format(sys.exc_traceback.tb_lineno, error))
                         self.logger.debug(u"Sleeping until next scheduled poll.")
                         dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
-                dev.updateStatesOnServer(states_list)
-
-            self.logger.info(u"Data refreshed.")
-            parsed_simplejson = {}
+                    self.logger.info(u"[{0}] Data refreshed.".format(dev.name))
+                    dev.updateStatesOnServer(states_list)
 
         except Exception as error:
             self.logger.warning(u"There was a problem refreshing the data.  Will try on next cycle.")
