@@ -19,7 +19,6 @@ community forums.
 
 # =================================== TO DO ===================================
 
-# TODO: add feature to only check during hours
 # TODO: move system choice from plugin config to device (then users can manage multiple systems). Note that this will make the plugin no longer backward compatible.
 #       update list of stations when system is selected in dev props.
 # TODO: What happens when a system goes away?
@@ -54,7 +53,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'Bike Share Plugin for Indigo'
-__version__   = '2.0.01'
+__version__   = '2.0.02'
 
 # =============================================================================
 
@@ -160,11 +159,14 @@ class Plugin(indigo.PluginBase):
 
         plugin_prefs = self.pluginPrefs
 
-        try:
-            if int(plugin_prefs.get('showDebugLevel', "30")) < 4:
-                plugin_prefs['showDebugLevel'] = '30'
+        # Default choices for dynamic menus
+        if plugin_prefs.get('start_time', "") == "":
+            plugin_prefs['start_time'] = u"00:00"
 
-        except ValueError:
+        if plugin_prefs.get('stop_time', "") == "":
+            plugin_prefs['stop_time'] = u"24:00"
+
+        if int(plugin_prefs.get('showDebugLevel', "30")) < 4:
             plugin_prefs['showDebugLevel'] = '30'
 
         return plugin_prefs
@@ -177,9 +179,10 @@ class Plugin(indigo.PluginBase):
 
         try:
             while True:
-                self.downloadInterval = int(self.pluginPrefs.get('downloadInterval', 900))
-                self.refresh_bike_data()
-                self.process_triggers()
+                if self.business_hours():
+                    self.downloadInterval = int(self.pluginPrefs.get('downloadInterval', 900))
+                    self.refresh_bike_data()
+                    self.process_triggers()
                 self.sleep(self.downloadInterval)
 
         except self.StopThread:
@@ -223,7 +226,41 @@ class Plugin(indigo.PluginBase):
         return True, valuesDict
 
     # =============================================================================
-    # ============================= BikeShare Methods ==============================
+    # ============================ BikeShare Methods ==============================
+    # =============================================================================
+    def business_hours(self):
+        """
+        Test to see if current time is within plugin operation hours
+
+        The business_hours() method tests to see if the current time is within the
+        operation hours set within the plugin configuration dialog.  It returns
+        True if it is within business hours, otherwise returns False.
+
+        ---
+
+        :return:
+        """
+        now = dt.datetime.now()
+        start_updating = self.pluginPrefs.get('start_time', "00:00")
+        stop_updating  = self.pluginPrefs.get('stop_time', "24:00")
+
+        # If there is no time limit boundary.
+        if start_updating == "00:00" and stop_updating == "24:00":
+            return True
+
+        # Otherwise, let's check to see if we're open for business.
+        if stop_updating == "24:00":
+            stop_updating = "23:59"
+
+        start_time = now.replace(hour=int(start_updating[0:2]), minute=int(start_updating[3:5]))
+        stop_time  = now.replace(hour=int(stop_updating[0:2]), minute=int(start_updating[3:5]))
+
+        if start_time < now < stop_time:
+            return True
+        else:
+            self.logger.info(u"Closed for business.")
+            return False
+
     # =============================================================================
     def commsKillAll(self):
         """
@@ -307,6 +344,23 @@ class Plugin(indigo.PluginBase):
         self.indigo_log_handler.setLevel(20)
         self.logger.info(u"Data written to {0}".format(file_name))
         self.indigo_log_handler.setLevel(debug_level)
+
+    # =============================================================================
+    def generator_time(self, filter="", valuesDict=None, typeId="", targetId=0):
+        """
+        List of hours generator
+
+        Creates a list of times for use in setting the desired time for weather
+        forecast emails to be sent.
+
+        -----
+        :param str filter:
+        :param indigo.Dict valuesDict:
+        :param str typeId:
+        :param int targetId:
+        """
+
+        return [(u"{0:02.0f}:00".format(hour), u"{0:02.0f}:00".format(hour)) for hour in range(0, 25)]
 
     # =============================================================================
     def get_bike_data(self):
@@ -521,10 +575,9 @@ class Plugin(indigo.PluginBase):
         Refresh bike data based on a call from Indigo Plugin menu
 
         This method refreshes bike data for all devices based on a plugin menu call.
-        Note that the code in this method is generally the same as
-        runConcurrentThread(). Changes reflected there may need to be added here as
-        well.
-
+        Note that this method does not honor the business hours limitation, as it is
+        assumed that--since the user has requested an update--they are interested in
+        getting one regardless of the time of day.
         -----
 
         """
@@ -532,8 +585,6 @@ class Plugin(indigo.PluginBase):
         try:
             states_list = []
 
-            # TODO: Ensures we only go get the data once during update.  If moved to supporting multiple services,
-            #       we will need to process all like devices as a group.
             self.get_bike_data()
 
             for dev in indigo.devices.itervalues("self"):

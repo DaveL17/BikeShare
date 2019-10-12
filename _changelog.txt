@@ -1,5 +1,8 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v2.0.02
+- Adds business hours feature.
+
 v2.0.01
 - Complete rewrite of the plugin to use the standardized GBFS data sharing specification.
 

@@ -28,6 +28,10 @@
     </List>
   </Field>
 
+  <Field id="notes" type="label" alignWithControl="true" fontSize="small">
+    <Label>A note about languages: Not all sharing services provide data in all languages. The Bike Share plugin provides whatever data is made available by the selected service.</Label>
+  </Field>
+
   <Field id="bike_system" type="menu" defaultValue="" tooltip="Please select the desired bike system.">
     <Label>System:</Label>
       <List class="self" filter="" method="get_system_list" dynamicReload="true"/>
@@ -49,8 +53,14 @@
     </List>
   </Field>
 
-  <Field id="notes" type="label" alignWithControl="true" fontSize="small">
-    <Label>A note about languages: Not all sharing services provide data in all languages. The Bike Share plugin provides whatever data is made available by the selected service.</Label>
+  <Field id="start_time" type="menu" defaultValue="00:00" tooltip="">
+    <Label>Update Between:</Label>
+      <List class="self" filter="" method="generator_time"/>
+  </Field>
+
+  <Field id="stop_time" type="menu" defaultValue="23:00" tooltip="">
+    <Label>and:</Label>
+      <List class="self" filter="" method="generator_time"/>
   </Field>
 
     <!-- Debugging Template -->
