@@ -19,8 +19,8 @@ community forums.
 
 # =================================== TO DO ===================================
 
-# TODO: move system choice from plugin config to device (then users can manage multiple systems). Note that this will make the plugin no longer backward compatible.
-#       update list of stations when system is selected in dev props.
+# TODO: Move system choice from plugin config to device (then users can manage
+#       multiple systems).
 # TODO: What happens when a system goes away?
 
 # ================================== IMPORTS ==================================
@@ -53,7 +53,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'Bike Share Plugin for Indigo'
-__version__   = '2.0.02'
+__version__   = '2.0.03'
 
 # =============================================================================
 
@@ -435,7 +435,7 @@ class Plugin(indigo.PluginBase):
         -----
 
         :param str filter:
-        :param str typeId
+        :param str typeId:
         :param int targetId:
         :param indigo.Dict valuesDict:
         :return list:
@@ -484,7 +484,6 @@ class Plugin(indigo.PluginBase):
                             station[_] = False
 
                     states_list.append({'key': key, 'value': station[key]})
-
 
                 # ================================== Data Age ==================================
                 try:
