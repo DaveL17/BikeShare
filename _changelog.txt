@@ -1,5 +1,9 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v2.0.05
+- Improvements to device configuration validation.
+- Code refinements.
+
 v2.0.04
 - Removes all references to legacy version checking.
 

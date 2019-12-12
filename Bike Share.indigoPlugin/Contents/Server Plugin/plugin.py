@@ -53,7 +53,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'Bike Share Plugin for Indigo'
-__version__   = '2.0.04'
+__version__   = '2.0.05'
 
 # =============================================================================
 
@@ -112,20 +112,20 @@ class Plugin(indigo.PluginBase):
     # =============================================================================
     # =============================== Indigo Methods ===============================
     # =============================================================================
-    def actionControlDevice(self, actionId):
+    def actionControlDevice(self, action_id):
 
-        indigo.server.log(u"\n{0}".format(actionId))
+        indigo.server.log(u"\n{0}".format(action_id))
 
     # =============================================================================
-    def closedPrefsConfigUi(self, valuesDict, userCancelled):
+    def closedPrefsConfigUi(self, values_dict, user_cancelled):
 
-        if not userCancelled:
+        if not user_cancelled:
 
             # Ensure that self.pluginPrefs includes any recent changes.
-            for k in valuesDict:
-                self.pluginPrefs[k] = valuesDict[k]
+            for k in values_dict:
+                self.pluginPrefs[k] = values_dict[k]
 
-            self.debugLevel = int(valuesDict['showDebugLevel'])
+            self.debugLevel = int(values_dict['showDebugLevel'])
             self.indigo_log_handler.setLevel(self.debugLevel)
 
             self.logger.debug(u"User prefs saved.")
@@ -147,9 +147,9 @@ class Plugin(indigo.PluginBase):
         dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 
     # =============================================================================
-    def didDeviceCommPropertyChange(self, origDev, newDev):
+    def didDeviceCommPropertyChange(self, orig_dev, new_dev):
 
-        # if origDev.pluginProps['address'] != newDev.pluginProps['address']:
+        # if orig_dev.pluginProps['address'] != new_dev.pluginProps['address']:
         #     return True
 
         return False
@@ -216,14 +216,31 @@ class Plugin(indigo.PluginBase):
         pass
 
     # =============================================================================
-    def validatePrefsConfigUi(self, valuesDict):
+    def validatePrefsConfigUi(self, values_dict):
 
-        return True, valuesDict
+        return True, values_dict
 
     # =============================================================================
-    def validateDeviceConfigUi(self, valuesDict, typeID, devId):
+    def validateDeviceConfigUi(self, values_dict, typeID, devId):
 
-        return True, valuesDict
+        class DeviceValidationError(Exception):
+            def __init__(self, key=(), alert_text=None, message=u'Error!'):
+                self.key = key
+                self.alert_text = alert_text
+                self.message = message
+
+        error_msg_dict = indigo.Dict()
+
+        try:
+            return True, values_dict
+
+        except DeviceValidationError as err:
+            for key in err.key:
+                error_msg_dict[key] = err.message
+            if err.alert_text:
+                error_msg_dict['showAlertText'] = err.alert_text
+            return False, values_dict, error_msg_dict
+
 
     # =============================================================================
     # ============================ BikeShare Methods ==============================
@@ -346,7 +363,7 @@ class Plugin(indigo.PluginBase):
         self.indigo_log_handler.setLevel(debug_level)
 
     # =============================================================================
-    def generator_time(self, filter="", valuesDict=None, typeId="", targetId=0):
+    def generator_time(self, filter="", values_dict=None, type_id="", target_id=0):
         """
         List of hours generator
 
@@ -355,9 +372,9 @@ class Plugin(indigo.PluginBase):
 
         -----
         :param str filter:
-        :param indigo.Dict valuesDict:
-        :param str typeId:
-        :param int targetId:
+        :param indigo.Dict values_dict:
+        :param str type_id:
+        :param int target_id:
         """
 
         return [(u"{0:02.0f}:00".format(hour), u"{0:02.0f}:00".format(hour)) for hour in range(0, 25)]
@@ -398,13 +415,13 @@ class Plugin(indigo.PluginBase):
             self.logger.critical(u"Plugin exception. Line: {0} Error: {1}.".format(sys.exc_traceback.tb_lineno, error))
 
     # =============================================================================
-    def get_system_list(self, filter="", typeId=0, valuesDict=None, targetId=0):
+    def get_system_list(self, filter="", type_id=0, values_dict=None, target_id=0):
         """
 
         :param filter:
-        :param typeId:
-        :param valuesDict:
-        :param targetId:
+        :param type_id:
+        :param values_dict:
+        :param target_id:
         :return:
         """
         # Download the latest systems list from GitHub and create a pandas dataframe.
@@ -425,7 +442,7 @@ class Plugin(indigo.PluginBase):
         return sorted(li, key=lambda tup: tup[1].lower())
 
     # =============================================================================
-    def get_station_list(self, filter="", typeId=0, valuesDict=None, targetId=0):
+    def get_station_list(self, filter="", type_id=0, values_dict=None, target_id=0):
         """
         Create a list of bike sharing stations for dropdown menus
 
@@ -435,9 +452,9 @@ class Plugin(indigo.PluginBase):
         -----
 
         :param str filter:
-        :param str typeId:
-        :param int targetId:
-        :param indigo.Dict valuesDict:
+        :param str type_id:
+        :param int target_id:
+        :param indigo.Dict values_dict:
         :return list:
 
         """
@@ -540,7 +557,7 @@ class Plugin(indigo.PluginBase):
             pass
 
     # =============================================================================
-    def refreshBikeAction(self, valuesDict):
+    def refreshBikeAction(self, values_dict):
         """
         The refreshBikeAction() method has been deprecated.
 
@@ -548,13 +565,13 @@ class Plugin(indigo.PluginBase):
 
         -----
 
-        :param valuesDict:
+        :param values_dict:
         """
 
-        self.refresh_bike_action(valuesDict)
+        self.refresh_bike_action(values_dict)
 
     # =============================================================================
-    def refresh_bike_action(self, valuesDict):
+    def refresh_bike_action(self, values_dict):
         """
         Refresh bike data based on call from Indigo Action item
 
@@ -563,7 +580,7 @@ class Plugin(indigo.PluginBase):
 
         -----
 
-        :param indigo.dict valuesDict:
+        :param indigo.dict values_dict:
 
         """
         self.refresh_bike_data()
