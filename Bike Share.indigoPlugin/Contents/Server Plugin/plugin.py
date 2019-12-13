@@ -216,31 +216,24 @@ class Plugin(indigo.PluginBase):
         pass
 
     # =============================================================================
-    def validatePrefsConfigUi(self, values_dict):
-
-        return True, values_dict
+    # def validatePrefsConfigUi(self, values_dict):
+    #
+    #     error_msg_dict = indigo.Dict()
+    #
+    #     if len(error_msg_dict) > 0:
+    #         return False, values_dict, error_msg_dict
+    #
+    #     return True, values_dict
 
     # =============================================================================
-    def validateDeviceConfigUi(self, values_dict, typeID, devId):
-
-        class DeviceValidationError(Exception):
-            def __init__(self, key=(), alert_text=None, message=u'Error!'):
-                self.key = key
-                self.alert_text = alert_text
-                self.message = message
-
-        error_msg_dict = indigo.Dict()
-
-        try:
-            return True, values_dict
-
-        except DeviceValidationError as err:
-            for key in err.key:
-                error_msg_dict[key] = err.message
-            if err.alert_text:
-                error_msg_dict['showAlertText'] = err.alert_text
-            return False, values_dict, error_msg_dict
-
+    # def validateDeviceConfigUi(self, values_dict, typeID, devId):
+    #
+    #     error_msg_dict = indigo.Dict()
+    #
+    #     if len(error_msg_dict) > 0:
+    #         return False, values_dict, error_msg_dict
+    #
+    #     return True, values_dict
 
     # =============================================================================
     # ============================ BikeShare Methods ==============================
