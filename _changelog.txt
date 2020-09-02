@@ -1,5 +1,8 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v2.0.06
+- Better integrates DLFramework.
+
 v2.0.05
 - Improvements to device configuration validation.
 - Code refinements.

@@ -30,7 +30,7 @@ import datetime as dt
 import logging
 import pandas as pd
 import requests
-import sys
+import traceback
 
 # Third-party modules
 try:
@@ -53,7 +53,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'Bike Share Plugin for Indigo'
-__version__   = '2.0.05'
+__version__   = '2.0.06'
 
 # =============================================================================
 
@@ -89,12 +89,12 @@ class Plugin(indigo.PluginBase):
 
         self.indigo_log_handler.setLevel(self.debugLevel)
 
-        # ====================== Initialize DLFramework =======================
-
+        # ========================== Initialize DLFramework ===========================
         self.Fogbert = Dave.Fogbert(self)
 
         # Log pluginEnvironment information when plugin is first started
         self.Fogbert.pluginEnvironment()
+
 
         # try:
         #     pydevd.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)
@@ -299,8 +299,9 @@ class Plugin(indigo.PluginBase):
             try:
                 indigo.device.enable(dev, value=False)
 
-            except Exception as error:
-                self.logger.debug(u"Exception when trying to kill all comms. Line {1}: Error: {0}".format(sys.exc_traceback.tb_lineno, error))
+            except Exception:
+                self.Fogbert.pluginErrorHandler(traceback.format_exc())
+                self.logger.debug(u"Exception when trying to kill all comms.")
 
     # =============================================================================
     def commsUnkillAll(self):
@@ -330,8 +331,9 @@ class Plugin(indigo.PluginBase):
             try:
                 indigo.device.enable(dev, value=True)
 
-            except Exception as error:
-                self.logger.debug(u"Exception when trying to unkill all comms. Line: {1} Error: {0}".format(sys.exc_traceback.tb_lineno, error))
+            except Exception:
+                self.Fogbert.pluginErrorHandler(traceback.format_exc())
+                self.logger.debug(u"Exception when trying to unkill all comms.")
 
     # =============================================================================
     def dump_bike_data(self):
@@ -402,10 +404,11 @@ class Plugin(indigo.PluginBase):
 
         # ======================== Communication Error Handling ========================
         except requests.exceptions.ConnectionError:
+            self.Fogbert.pluginErrorHandler(traceback.format_exc())
             self.logger.critical(u"Connection Error. Will attempt again later.")
 
-        except Exception as error:
-            self.logger.critical(u"Plugin exception. Line: {0} Error: {1}.".format(sys.exc_traceback.tb_lineno, error))
+        except Exception:
+            self.Fogbert.pluginErrorHandler(traceback.format_exc())
 
     # =============================================================================
     def get_system_list(self, filter="", type_id=0, values_dict=None, target_id=0):
@@ -512,8 +515,8 @@ class Plugin(indigo.PluginBase):
                     states_list.append({'key': 'last_reported', 'value': last_report_human})
                     states_list.append({'key': 'dataAge', 'value': diff_time_str, 'uiValue': diff_time_str})
 
-                except Exception as e:
-                    self.logger.critical(u"{0}".format(e))
+                except Exception:
+                    self.Fogbert.pluginErrorHandler(traceback.format_exc())
                     states_list.append({'key': 'dataAge', 'value': u"Unknown", 'uiValue': u"Unknown"})
 
         dev.updateStatesOnServer(states_list)
@@ -621,17 +624,16 @@ class Plugin(indigo.PluginBase):
                             self.logger.debug(u"Comm error. Sleeping until next scheduled poll.")
                             dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
-                    except Exception as error:
+                    except Exception:
                         states_list.append({'key': 'onOffState', 'value': False, 'uiValue': u"{0}".format(dev.states['num_bikes_available'])})
                         dev.setErrorStateOnServer(u"Error")
-                        self.logger.debug(u"Exception Line: {0} Error: {1}.".format(sys.exc_traceback.tb_lineno, error))
+                        self.Fogbert.pluginErrorHandler(traceback.format_exc())
                         self.logger.debug(u"Sleeping until next scheduled poll.")
                         dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
                     self.logger.info(u"[{0}] Data refreshed.".format(dev.name))
                     dev.updateStatesOnServer(states_list)
 
-        except Exception as error:
+        except Exception:
+            self.Fogbert.pluginErrorHandler(traceback.format_exc())
             self.logger.warning(u"There was a problem refreshing the data.  Will try on next cycle.")
-            self.logger.debug(u"Exception Line: {0} Error: {1}.".format(sys.exc_traceback.tb_lineno, error))
-    # =============================================================================
