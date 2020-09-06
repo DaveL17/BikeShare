@@ -58,9 +58,9 @@ __version__   = '2.0.06'
 # =============================================================================
 
 kDefaultPluginPrefs = {
-    u'bikeSharingService' : "",
-    u'downloadInterval'   : 895,    # Frequency of updates.
-    u'showDebugLevel'     : "30",   # Default logging level
+    u'bikeSharingService':  "",
+    u'downloadInterval':    895,    # Frequency of updates.
+    u'showDebugLevel':      "30",   # Default logging level
     }
 
 
@@ -76,7 +76,8 @@ class Plugin(indigo.PluginBase):
         self.master_trigger_dict = {}
 
         # ================================= Debugging ==================================
-        self.plugin_file_handler.setFormatter(logging.Formatter('%(asctime)s.%(msecs)03d\t%(levelname)-10s\t%(name)s.%(funcName)-28s %(msg)s', datefmt='%Y-%m-%d %H:%M:%S'))
+        log_format = '%(asctime)s.%(msecs)03d\t%(levelname)-10s\t%(name)s.%(funcName)-28s %(msg)s'
+        self.plugin_file_handler.setFormatter(logging.Formatter(log_format, datefmt='%Y-%m-%d %H:%M:%S'))
         self.debugLevel = int(self.pluginPrefs.get('showDebugLevel', "30"))
 
         # Convert debugLevel scale to new scale
@@ -94,7 +95,6 @@ class Plugin(indigo.PluginBase):
 
         # Log pluginEnvironment information when plugin is first started
         self.Fogbert.pluginEnvironment()
-
 
         # try:
         #     pydevd.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)
@@ -137,7 +137,7 @@ class Plugin(indigo.PluginBase):
     # =============================================================================
     def deviceStartComm(self, dev):
 
-        self.parse_bike_data(dev)
+        self.parse_bike_data(dev=dev)
         dev.updateStateOnServer('onOffState', value=False, uiValue=u"Enabled")
 
     # =============================================================================
@@ -174,7 +174,8 @@ class Plugin(indigo.PluginBase):
     # =============================================================================
     def runConcurrentThread(self):
 
-        self.logger.debug(u"runConcurrentThread initiated. Sleeping for 5 seconds to allow the Indigo Server to finish.")
+        self.logger.debug(u"runConcurrentThread initiated. Sleeping for 5 seconds to allow the Indigo Server "
+                          u"to finish.")
         self.sleep(5)
 
         try:
@@ -214,26 +215,6 @@ class Plugin(indigo.PluginBase):
     def triggerStopProcessing(self, trigger):
 
         pass
-
-    # =============================================================================
-    # def validatePrefsConfigUi(self, values_dict):
-    #
-    #     error_msg_dict = indigo.Dict()
-    #
-    #     if len(error_msg_dict) > 0:
-    #         return False, values_dict, error_msg_dict
-    #
-    #     return True, values_dict
-
-    # =============================================================================
-    # def validateDeviceConfigUi(self, values_dict, typeID, devId):
-    #
-    #     error_msg_dict = indigo.Dict()
-    #
-    #     if len(error_msg_dict) > 0:
-    #         return False, values_dict, error_msg_dict
-    #
-    #     return True, values_dict
 
     # =============================================================================
     # ============================ BikeShare Methods ==============================
@@ -300,7 +281,7 @@ class Plugin(indigo.PluginBase):
                 indigo.device.enable(dev, value=False)
 
             except Exception:
-                self.Fogbert.pluginErrorHandler(traceback.format_exc())
+                self.Fogbert.pluginErrorHandler(sub_error=traceback.format_exc())
                 self.logger.debug(u"Exception when trying to kill all comms.")
 
     # =============================================================================
@@ -332,7 +313,7 @@ class Plugin(indigo.PluginBase):
                 indigo.device.enable(dev, value=True)
 
             except Exception:
-                self.Fogbert.pluginErrorHandler(traceback.format_exc())
+                self.Fogbert.pluginErrorHandler(sub_error=traceback.format_exc())
                 self.logger.debug(u"Exception when trying to unkill all comms.")
 
     # =============================================================================
@@ -345,13 +326,14 @@ class Plugin(indigo.PluginBase):
         """
 
         debug_level = int(self.pluginPrefs.get('showDebugLevel', "30"))
-        time_stamp        = dt.datetime.now().strftime("%Y-%m-%d %H.%M")
-        file_name         = u"{0}/com.fogbert.indigoplugin.bikeShare/{1} Bike Share data.txt".format(indigo.server.getLogsFolderPath(), time_stamp)
+        time_stamp        = dt.datetime.now().strftime(fmt="%Y-%m-%d %H.%M")
+        file_name         = u"{0}/com.fogbert.indigoplugin.bikeShare/{1} Bike Share " \
+                            u"data.txt".format(indigo.server.getLogsFolderPath(), time_stamp)
 
         with open(file_name, 'w') as out_file:
-            out_file.write(u"Bike Share Plugin Data\n")
-            out_file.write(u"{0}\n".format(time_stamp))
-            out_file.write(u"{0}".format(self.system_data))
+            out_file.write("Bike Share Plugin Data\n")
+            out_file.write("{0}\n".format(time_stamp))
+            out_file.write("{0}".format(self.system_data))
 
         self.indigo_log_handler.setLevel(20)
         self.logger.info(u"Data written to {0}".format(file_name))
@@ -404,11 +386,11 @@ class Plugin(indigo.PluginBase):
 
         # ======================== Communication Error Handling ========================
         except requests.exceptions.ConnectionError:
-            self.Fogbert.pluginErrorHandler(traceback.format_exc())
+            self.Fogbert.pluginErrorHandler(sub_error=traceback.format_exc())
             self.logger.critical(u"Connection Error. Will attempt again later.")
 
         except Exception:
-            self.Fogbert.pluginErrorHandler(traceback.format_exc())
+            self.Fogbert.pluginErrorHandler(sub_error=traceback.format_exc())
 
     # =============================================================================
     def get_system_list(self, filter="", type_id=0, values_dict=None, target_id=0):
@@ -516,7 +498,7 @@ class Plugin(indigo.PluginBase):
                     states_list.append({'key': 'dataAge', 'value': diff_time_str, 'uiValue': diff_time_str})
 
                 except Exception:
-                    self.Fogbert.pluginErrorHandler(traceback.format_exc())
+                    self.Fogbert.pluginErrorHandler(sub_error=traceback.format_exc())
                     states_list.append({'key': 'dataAge', 'value': u"Unknown", 'uiValue': u"Unknown"})
 
         dev.updateStatesOnServer(states_list)
@@ -542,7 +524,8 @@ class Plugin(indigo.PluginBase):
                 station_status = dev.states['statusValue']
                 if station_name in self.master_trigger_dict.keys():
 
-                    if station_status != 'In Service':  # This relies on all services reporting status value of 'In Service' when things are normal.
+                    # This relies on all services reporting status value of 'In Service' when things are normal.
+                    if station_status != 'In Service':
                         trigger_id = self.master_trigger_dict[station_name]
 
                         if indigo.triggers[trigger_id].enabled:
@@ -564,7 +547,7 @@ class Plugin(indigo.PluginBase):
         :param values_dict:
         """
 
-        self.refresh_bike_action(values_dict)
+        self.refresh_bike_action(values_dict=values_dict)
 
     # =============================================================================
     def refresh_bike_action(self, values_dict):
@@ -613,7 +596,11 @@ class Plugin(indigo.PluginBase):
                             self.parse_bike_data(dev)
 
                             if dev.states['is_renting'] == 1:
-                                states_list.append({'key': 'onOffState', 'value': True, 'uiValue': u"{0}".format(dev.states['num_bikes_available'])})
+                                states_list.append({'key': 'onOffState',
+                                                    'value': True,
+                                                    'uiValue': u"{0}".format(dev.states['num_bikes_available'])
+                                                    }
+                                                   )
                                 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
                             else:
                                 states_list.append({'key': 'onOffState', 'value': False, 'uiValue': u"Not Renting"})
@@ -625,9 +612,13 @@ class Plugin(indigo.PluginBase):
                             dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
                     except Exception:
-                        states_list.append({'key': 'onOffState', 'value': False, 'uiValue': u"{0}".format(dev.states['num_bikes_available'])})
+                        states_list.append({'key': 'onOffState',
+                                            'value': False,
+                                            'uiValue': u"{0}".format(dev.states['num_bikes_available'])
+                                            }
+                                           )
                         dev.setErrorStateOnServer(u"Error")
-                        self.Fogbert.pluginErrorHandler(traceback.format_exc())
+                        self.Fogbert.pluginErrorHandler(sub_error=traceback.format_exc())
                         self.logger.debug(u"Sleeping until next scheduled poll.")
                         dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
@@ -635,5 +626,5 @@ class Plugin(indigo.PluginBase):
                     dev.updateStatesOnServer(states_list)
 
         except Exception:
-            self.Fogbert.pluginErrorHandler(traceback.format_exc())
+            self.Fogbert.pluginErrorHandler(sub_error=traceback.format_exc())
             self.logger.warning(u"There was a problem refreshing the data.  Will try on next cycle.")
