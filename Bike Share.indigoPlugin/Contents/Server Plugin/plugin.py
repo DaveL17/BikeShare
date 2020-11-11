@@ -53,7 +53,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'Bike Share Plugin for Indigo'
-__version__   = '2.0.06'
+__version__   = '2.0.07'
 
 # =============================================================================
 
@@ -463,7 +463,7 @@ class Plugin(indigo.PluginBase):
         for station in self.system_data['station_information']['data']['stations']:
             if station['station_id'] == station_id:
                 for key in ('capacity', 'lat', 'lon', 'name',):
-                    states_list.append({'key': key, 'value': station[key]})
+                    states_list.append({'key': key, 'value': station.get(key, 'Unknown')})
 
         # Station Status
         for station in self.system_data['station_status']['data']['stations']:
@@ -478,7 +478,7 @@ class Plugin(indigo.PluginBase):
                         else:
                             station[_] = False
 
-                    states_list.append({'key': key, 'value': station[key]})
+                    states_list.append({'key': key, 'value': station.get(key, 'Unknown')})
 
                 # ================================== Data Age ==================================
                 try:
@@ -494,8 +494,8 @@ class Plugin(indigo.PluginBase):
                         diff_time = 0
                     diff_time_str = u"{0}".format(dt.timedelta(seconds=diff_time.total_seconds()))
 
-                    states_list.append({'key': 'last_reported', 'value': last_report_human})
-                    states_list.append({'key': 'dataAge', 'value': diff_time_str, 'uiValue': diff_time_str})
+                    states_list.append({'key': 'last_reported', 'value': station.get(last_report_human, 'Unknown')})
+                    states_list.append({'key': 'dataAge', 'value': station.get(diff_time_str, u'Unknown')})
 
                 except Exception:
                     self.Fogbert.pluginErrorHandler(sub_error=traceback.format_exc())
