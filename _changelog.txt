@@ -1,5 +1,8 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v2.0.08
+- Fixes bug in readme.md file where logo did not display.
+
 v2.0.07
 - Better addresses situations where bike service doesn't fully support the
   standard API.

@@ -53,7 +53,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'Bike Share Plugin for Indigo'
-__version__   = '2.0.07'
+__version__   = '2.0.08'
 
 # =============================================================================
 
