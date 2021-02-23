@@ -1,5 +1,9 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v2.0.09
+- Implements Constants.py
+- Code refinements.
+
 v2.0.08
 - Fixes bug in readme.md file where logo did not display.
 

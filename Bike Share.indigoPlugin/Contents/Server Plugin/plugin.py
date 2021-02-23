@@ -22,7 +22,10 @@ community forums.
 # TODO: Move system choice from plugin config to device (then users can manage
 #       multiple systems).
 # TODO: What happens when a system goes away?
-
+# TODO: It looks like you have to restart the plugin when the service is
+#       changed in order for the new service to be picked up.
+# TODO: Reorder the devices XML states so they appear on control page lists
+#       in order.
 # ================================== IMPORTS ==================================
 
 # Built-in modules
@@ -52,8 +55,8 @@ __author__    = Dave.__author__
 __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
-__title__     = 'Bike Share Plugin for Indigo'
-__version__   = '2.0.08'
+__title__     = u'Bike Share Plugin for Indigo'
+__version__   = u'2.0.09'
 
 # =============================================================================
 
