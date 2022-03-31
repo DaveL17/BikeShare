@@ -1,7 +1,12 @@
 Bike Share Indigo Plugin - Developed by: DaveL17
 
+v2022.0.1
+- Updates plugin for Indigo 2022.1 and Python 3.
+- Moves "Refresh Bike Data" to Device Controls menu.
+- Eliminates the need for the `pandas` module.
+
 v2.0.09
-- Implements Constants.py
+- Implements constants.py
 - Code refinements.
 
 v2.0.08
@@ -23,6 +28,9 @@ v2.0.04
 
 v2.0.03
 - For publication.
+
+v2022.0.1
+- Updates to Python 3 and Indigo 2022.
 
 v2.0.02
 - Adds business hours feature.
@@ -68,14 +76,14 @@ v1.0.07
   Apple's Python install.
 
 v1.0.06
-- Moves documentation to Github wiki.
+- Moves documentation to GitHub wiki.
 - IPS Configuration
 - Fixes bug in info.plist (API reference)
 
 v1.0.05
 - Code consolidation using DLFramework.
 - Code consolidation using pluginConfig templates.
-- Adds note to documentation that the plugin requires Internet access in order to function.
+- Adds note to documentation that the plugin requires Internet in order to function.
 
 v1.0.04
 - Standardizes plugin menu item styles. Menu items with an ellipsis (...)
@@ -96,7 +104,7 @@ v1.0.02
 - Add menu item to enable/disable all plugin devices.
 - Adds Indigo UI icon indicator control:  (green = online,
   gray = offline/disabled/out of service, red = error/no comm)
-- Moves support URL to Github.
+- Moves support URL to GitHub.
 - UI Refinements
 
 v1.0.01

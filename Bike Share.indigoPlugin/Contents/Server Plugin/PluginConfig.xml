@@ -4,7 +4,7 @@
   <SupportURL>https://github.com/DaveL17/BikeShare/wiki/configuration</SupportURL>
 
   <Field id="infoLabel00" type="label">
-    <Label>Bikeshare Plugin</Label>
+    <Label>BikeShare Plugin</Label>
   </Field>
 
   <Field id="infoLabel01" type="label" fontSize="small">

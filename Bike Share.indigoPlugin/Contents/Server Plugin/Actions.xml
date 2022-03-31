@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Actions>
-	<Action id="refresh_bike_data">
+	<Action id="refresh_bike_data" uiPath="DeviceActions">
 		<Name>Refresh Bike Data</Name>
 		<CallbackMethod>refresh_bike_action</CallbackMethod>
 	</Action>
