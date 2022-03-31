@@ -3,7 +3,7 @@ Bike Share Indigo Plugin - Developed by: DaveL17
 v2022.0.1
 - Updates plugin for Indigo 2022.1 and Python 3.
 - Moves "Refresh Bike Data" to Device Controls menu.
-- Eliminates the need for the `pandas` module.
+- Eliminates need for the `pandas` module.
 
 v2.0.09
 - Implements constants.py
