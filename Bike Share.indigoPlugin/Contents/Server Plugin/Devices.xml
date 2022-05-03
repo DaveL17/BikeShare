@@ -41,36 +41,6 @@
 
 		<States>
 
-			<State id="onOffState">
-				<ValueType>Boolean</ValueType>
-				<TriggerLabel>Device State</TriggerLabel>
-				<ControlPageLabel>Device State</ControlPageLabel>
-			</State>
-
-			<State id="is_renting">
-				<ValueType>Boolean</ValueType>
-				<TriggerLabel>Is Renting</TriggerLabel>
-				<ControlPageLabel>Is Renting</ControlPageLabel>
-			</State>
-
-			<State id="is_returning">
-				<ValueType>Boolean</ValueType>
-				<TriggerLabel>Is Returning</TriggerLabel>
-				<ControlPageLabel>Is Returning</ControlPageLabel>
-			</State>
-
-			<State id="dataAge">
-				<ValueType>String</ValueType>
-				<TriggerLabel>Data Age</TriggerLabel>
-				<ControlPageLabel>Data Age</ControlPageLabel>
-			</State>
-
-			<State id="last_reported">
-				<ValueType>Integer</ValueType>
-				<TriggerLabel>Last Reported</TriggerLabel>
-				<ControlPageLabel>Last Reported</ControlPageLabel>
-			</State>
-
 			<State id="num_bikes_available">
 				<ValueType>Integer</ValueType>
 				<TriggerLabel>Bikes Available</TriggerLabel>
@@ -83,16 +53,22 @@
 				<ControlPageLabel>Bikes Disabled</ControlPageLabel>
 			</State>
 
+			<State id="capacity">
+				<ValueType>Integer</ValueType>
+				<TriggerLabel>Capacity</TriggerLabel>
+				<ControlPageLabel>Capacity</ControlPageLabel>
+			</State>
+
+			<State id="dataAge">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Data Age</TriggerLabel>
+				<ControlPageLabel>Data Age</ControlPageLabel>
+			</State>
+
 			<State id="num_docks_available">
 				<ValueType>Integer</ValueType>
 				<TriggerLabel>Docks Available</TriggerLabel>
 				<ControlPageLabel>Docks Available</ControlPageLabel>
-			</State>
-
-			<State id="name">
-				<ValueType>String</ValueType>
-				<TriggerLabel>Location</TriggerLabel>
-				<ControlPageLabel>Location</ControlPageLabel>
 			</State>
 
 			<State id="num_docks_disabled">
@@ -107,22 +83,60 @@
 				<ControlPageLabel>E-Bikes Available</ControlPageLabel>
 			</State>
 
+			<State id="is_renting">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Is Renting</TriggerLabel>
+				<ControlPageLabel>Is Renting</ControlPageLabel>
+			</State>
+
+			<State id="is_returning">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Is Returning</TriggerLabel>
+				<ControlPageLabel>Is Returning</ControlPageLabel>
+			</State>
+
+			<State id="last_reported">
+				<ValueType>Integer</ValueType>
+				<TriggerLabel>Last Reported</TriggerLabel>
+				<ControlPageLabel>Last Reported</ControlPageLabel>
+			</State>
+
+			<State id="sep1" type="separator">
+				<ValueType>Separator</ValueType>
+			</State>
+
+			<State id="name">
+				<ValueType>String</ValueType>
+				<TriggerLabel>Location</TriggerLabel>
+				<ControlPageLabel>Location</ControlPageLabel>
+			</State>
+
 			<State id="lat">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>Latitude</TriggerLabel>
 				<ControlPageLabel>Latitude</ControlPageLabel>
 			</State>
 
-			<State id="capacity">
-				<ValueType>Integer</ValueType>
-				<TriggerLabel>Capacity</TriggerLabel>
-				<ControlPageLabel>Capacity</ControlPageLabel>
-			</State>
-
 			<State id="lon">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>Longitude</TriggerLabel>
 				<ControlPageLabel>Longitude</ControlPageLabel>
+			</State>
+
+			<State id="sep2" type="separator">
+				<ValueType>Separator</ValueType>
+			</State>
+
+			<State id="onOffState">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Device State</TriggerLabel>
+				<ControlPageLabel>Device State</ControlPageLabel>
+			</State>
+
+			<State id="businessHours">
+				<ValueType>Boolean</ValueType>
+				<TriggerLabel>Business Hours (true or false)</TriggerLabel>
+				<ControlPageLabel>Business Hours (true or false)</ControlPageLabel>
 			</State>
 
 		</States>

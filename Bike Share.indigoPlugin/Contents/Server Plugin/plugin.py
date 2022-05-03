@@ -17,8 +17,6 @@ please feel free to post to the BikeShare Plugin forum on the Indigo community f
 # TODO - What happens when a system goes away?
 # TODO - It looks like you have to restart the plugin when the service is changed in order for the
 #        new service to be picked up.
-# TODO - Reorder the devices XML states so they appear on control page lists in order.
-# TODO - Add descriptive State when device is outside business hours.
 
 # ================================== IMPORTS ==================================
 
@@ -26,19 +24,14 @@ please feel free to post to the BikeShare Plugin forum on the Indigo community f
 import datetime as dt
 import logging
 import csv
-# import pandas as pd
 
 # Third-party modules
 try:
     import indigo  # noqa
+#     import pydevd
     import requests
 except ImportError:
     pass
-
-# try:
-#     import pydevd
-# except ImportError:
-#     pass
 
 # My modules
 import DLFramework.DLFramework as Dave
@@ -59,7 +52,7 @@ class Plugin(indigo.PluginBase):
     """
     Standard Indigo Plugin Class
 
-    :param class indigo.PluginBase:
+    :param indigo.PluginBase:
     """
     def __init__(self, plugin_id="", plugin_display_name="", plugin_version="", plugin_prefs=None):
         """
@@ -73,8 +66,9 @@ class Plugin(indigo.PluginBase):
         super().__init__(plugin_id, plugin_display_name, plugin_version, plugin_prefs)
 
         # ============================ Instance Attributes =============================
+        self.open_for_business       = None
         self.debug_level             = int(self.pluginPrefs.get('showDebugLevel', 30))
-        self.downloadInterval        = int(self.pluginPrefs.get('downloadInterval', 900))
+        self.download_interval       = int(self.pluginPrefs.get('downloadInterval', 900))
         self.master_trigger_dict     = {}
         self.plugin_is_initializing  = True
         self.plugin_is_shutting_down = False
@@ -101,18 +95,17 @@ class Plugin(indigo.PluginBase):
         # Log pluginEnvironment information when plugin is first started
         self.fogbert.pluginEnvironment()
 
+        # ============================= Remote Debugging ==============================
         # try:
-        #     pydevd.settrace('localhost',
-        #                     port=5678,
-        #                     stdoutToServer=True,
-        #                     stderrToServer=True,
-        #                     suspend=False
-        #                     )
+        #     pydevd.settrace(
+        #         'localhost',
+        #         port=5678,
+        #         stdoutToServer=True,
+        #         stderrToServer=True,
+        #         suspend=False
+        #     )
         # except:
         #     pass
-
-        # Update system data
-        self.get_bike_data()
 
         self.plugin_is_initializing = False
 
@@ -129,26 +122,32 @@ class Plugin(indigo.PluginBase):
     # =============================================================================
     def closedPrefsConfigUi(self, values_dict=None, user_cancelled=False):  # noqa
         """
-        Title Placeholder
+        Standard Indigo method called when plugin preferences dialog is closed.
 
         :param indigo.Dict values_dict:
         :param bool user_cancelled:
         :return:
         """
         if not user_cancelled:
-
             # Ensure that self.pluginPrefs includes any recent changes.
             for k in values_dict:
                 self.pluginPrefs[k] = values_dict[k]
 
+            # Debug Logging
             self.debug_level = int(values_dict['showDebugLevel'])
             self.indigo_log_handler.setLevel(self.debug_level)
+            indigo.server.log(
+                f"Debugging on (Level: {DEBUG_LABELS[self.debug_level]} ({self.debug_level})"
+            )
 
-            self.logger.debug("User prefs saved.")
+            # Plugin-specific actions
+            self.download_interval = int(values_dict.get('downloadInterval', 15))
+            self.logger.debug("Plugin prefs saved.")
 
         else:
+            self.logger.debug("Plugin prefs cancelled.")
 
-            self.logger.debug("User prefs cancelled.")
+        return values_dict
 
     # =============================================================================
     def deviceStartComm(self, dev=None):  # noqa
@@ -206,10 +205,10 @@ class Plugin(indigo.PluginBase):
         try:
             while True:
                 if self.business_hours():
-                    self.downloadInterval = int(self.pluginPrefs.get('downloadInterval', 900))
+                    self.download_interval = int(self.pluginPrefs.get('downloadInterval', 900))
                     self.refresh_bike_data()
                     self.process_triggers()
-                self.sleep(self.downloadInterval)
+                self.sleep(self.download_interval)
 
         except self.StopThread:
             self.logger.debug("Stopping concurrent thread.")
@@ -241,6 +240,9 @@ class Plugin(indigo.PluginBase):
         """
         # =========================== Audit Indigo Version ============================
         self.fogbert.audit_server_version(min_ver=2022)
+
+        # Update system data
+        self.get_bike_data()
 
     # =============================================================================
     def triggerStartProcessing(self, trigger):  # noqa
@@ -289,6 +291,7 @@ class Plugin(indigo.PluginBase):
             self.logger.info("Closed for business.")
             value = False
 
+        self.open_for_business = value
         return value
 
     # =============================================================================
@@ -660,13 +663,20 @@ class Plugin(indigo.PluginBase):
                                 'key': 'onOffState',
                                 'value': False,
                                 'uiValue': f"{dev.states['num_bikes_available']}"
-                            }
+                            },
                         )
                         dev.setErrorStateOnServer("Error")
                         self.logger.exception()
                         self.logger.debug("Sleeping until next scheduled poll.")
                         dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
+                    states_list.append(
+                        {
+                            'key': 'businessHours',
+                            'value': self.open_for_business,
+                            'uiValue': self.open_for_business
+                        }
+                    )
                     self.logger.info(f"[{dev.name}] Data refreshed.")
                     dev.updateStatesOnServer(states_list)
 

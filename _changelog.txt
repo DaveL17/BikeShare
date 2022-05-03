@@ -4,6 +4,10 @@ v2022.0.1
 - Updates plugin for Indigo 2022.1 and Python 3.
 - Moves "Refresh Bike Data" to Device Controls menu.
 - Eliminates need for the `pandas` module.
+- Reorganizes device states for better display in control page and trigger state lists.
+- Adds device state reflecting whether the system is within user-defined business hours (to show that data might be
+  stale).
+- Standardizes Indigo method implementation.
 
 v2.0.09
 - Implements constants.py
@@ -13,8 +17,7 @@ v2.0.08
 - Fixes bug in readme.md file where logo did not display.
 
 v2.0.07
-- Better addresses situations where bike service doesn't fully support the
-  standard API.
+- Better addresses situations where bike service doesn't fully support the standard API.
 
 v2.0.06
 - Better integrates DLFramework.
@@ -64,10 +67,8 @@ v1.1.01
 - Updates to Indigo API 2.0 (Indigo 7 now required).
 - Converts testStation device state from string to boolean True/False.
 - Refactors 'dataAge' and 'executionTime' device states.
-  . 'dataAge' now keyed to the last time the bike dock station communicated
-    with the bike sharing service.
-  . 'executionTime' now keyed to the last time the Indigo plugin communicated
-    with the bike sharing service.
+  . 'dataAge' now keyed to the last time the bike dock station communicated with the bike sharing service.
+  . 'executionTime' now keyed to the last time the Indigo plugin communicated with the bike sharing service.
 - Removes legacy device state 'renting'. Users should use the state 'isRenting'.
 
 v1.0.07
@@ -86,11 +87,9 @@ v1.0.05
 - Adds note to documentation that the plugin requires Internet in order to function.
 
 v1.0.04
-- Standardizes plugin menu item styles. Menu items with an ellipsis (...)
-  denotes that a dialog box will open. Menu items without an ellipsis will take
-  immediate action.
-- Fixed bug related to version control for "Check for Plugin Updates" menu
-  action.
+- Standardizes plugin menu item styles. Menu items with an ellipsis (...) denotes that a dialog box will open. Menu
+  items without an ellipsis will take immediate action.
+- Fixed bug related to version control for "Check for Plugin Updates" menu action.
 
 v1.0.03
 - Stylistic changes to Indigo Plugin Update Checker module.
@@ -102,14 +101,12 @@ v1.0.03
 v1.0.02
 - Adds trigger to report when a station is not in service.
 - Add menu item to enable/disable all plugin devices.
-- Adds Indigo UI icon indicator control:  (green = online,
-  gray = offline/disabled/out of service, red = error/no comm)
+- Adds Indigo UI icon indicator control:  (green = online, gray = offline/disabled/out of service, red = error/no comm)
 - Moves support URL to GitHub.
 - UI Refinements
 
 v1.0.01
-- Updates version number to full release and moves the
-  project to GitHub.
+- Updates version number to full release and moves the project to GitHub.
 
 v0.1.4
 - String substitution updated for future functionality.
