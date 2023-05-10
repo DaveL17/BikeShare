@@ -4,19 +4,12 @@
 BikeShare Indigo Plugin
 Author: DaveL17
 
-The BikeShare Plugin takes JSON data provided by services and makes it available in Indigo. Users
-create individual devices that represent bike dock stations. The plugin makes 100% of the data
-available--however, some sharing services don't currently populate 100% of the fields that the
-system provides. Any service that uses the "Station Bean List" format should be compatible with
-this plugin. If there are stations that support this format which are not included in this plugin,
-please feel free to post to the BikeShare Plugin forum on the Indigo community forums.
+The BikeShare Plugin takes JSON data provided by services and makes it available in Indigo. Users create individual
+devices that represent bike dock stations. The plugin makes 100% of the data available--however, some sharing services
+don't currently populate 100% of the fields that the system provides. Any service that uses the "Station Bean List"
+format should be compatible with this plugin. If there are stations that support this format which are not included in
+this plugin, please feel free to post to the BikeShare Plugin forum on the Indigo community forums.
 """
-
-# =================================== TO DO ===================================
-# TODO - Move system choice from plugin config to device (then users can manage multiple systems).
-# TODO - What happens when a system goes away?
-# TODO - It looks like you have to restart the plugin when the service is changed in order for the
-#        new service to be picked up.
 
 # ================================== IMPORTS ==================================
 
@@ -24,12 +17,12 @@ please feel free to post to the BikeShare Plugin forum on the Indigo community f
 import datetime as dt
 import logging
 import csv
+import requests
 
 # Third-party modules
 try:
     import indigo  # noqa
-#     import pydevd
-    import requests
+    import pydevd
 except ImportError:
     pass
 
@@ -44,7 +37,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'BikeShare Plugin for Indigo'
-__version__   = '2022.0.1'
+__version__   = '2022.0.3'
 
 
 # =============================================================================
@@ -75,10 +68,8 @@ class Plugin(indigo.PluginBase):
         self.system_data             = {}
 
         # =============================== Debug Logging ================================
-        log_format = '%(asctime)s.%(msecs)03d\t%(levelname)-10s\t%(name)s.%(funcName)-28s %(msg)s'
-        self.plugin_file_handler.setFormatter(
-            logging.Formatter(log_format, datefmt='%Y-%m-%d %H:%M:%S')
-        )
+        log_format = '%(asctime)s.%(msecs)03d\t%(levelname)-10s\t%(name)s.%(funcName)-28s %(message)s'
+        self.plugin_file_handler.setFormatter(logging.Formatter(log_format, datefmt='%Y-%m-%d %H:%M:%S'))
         self.debug_level = int(self.pluginPrefs.get('showDebugLevel', "30"))
 
         # Convert debugLevel scale to new scale
@@ -92,22 +83,21 @@ class Plugin(indigo.PluginBase):
 
         # ========================== Initialize DLFramework ===========================
         self.fogbert = Dave.Fogbert(self)
-        # Log pluginEnvironment information when plugin is first started
-        self.fogbert.pluginEnvironment()
 
         # ============================= Remote Debugging ==============================
         # try:
-        #     pydevd.settrace(
-        #         'localhost',
-        #         port=5678,
-        #         stdoutToServer=True,
-        #         stderrToServer=True,
-        #         suspend=False
-        #     )
+        #     pydevd.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)
         # except:
         #     pass
 
         self.plugin_is_initializing = False
+
+    # =============================================================================
+    def log_plugin_environment(self):
+        """
+        Log pluginEnvironment information when plugin is first started
+        """
+        self.fogbert.pluginEnvironment()
 
     # =============================================================================
     def __del__(self):
@@ -136,9 +126,7 @@ class Plugin(indigo.PluginBase):
             # Debug Logging
             self.debug_level = int(values_dict['showDebugLevel'])
             self.indigo_log_handler.setLevel(self.debug_level)
-            indigo.server.log(
-                f"Debugging on (Level: {DEBUG_LABELS[self.debug_level]} ({self.debug_level})"
-            )
+            indigo.server.log(f"Debugging on (Level: {DEBUG_LABELS[self.debug_level]} ({self.debug_level})")
 
             # Plugin-specific actions
             self.download_interval = int(values_dict.get('downloadInterval', 15))
@@ -196,10 +184,6 @@ class Plugin(indigo.PluginBase):
         """
         Standard Indigo method that runs continuously (if present)
         """
-        self.logger.debug(
-            "runConcurrentThread initiated. Sleeping for 2 seconds to allow the Indigo Server to "
-            "finish."
-        )
         self.sleep(2)
 
         try:
@@ -270,9 +254,8 @@ class Plugin(indigo.PluginBase):
         """
         Test to see if current time is within plugin operation hours
 
-        The business_hours() method tests to see if the current time is within the operation hours
-        set within the plugin configuration dialog.  It returns True if it is within business hours,
-        otherwise returns False.
+        The business_hours() method tests to see if the current time is within the operation hours set within the
+        plugin configuration dialog.  It returns True if it is within business hours, otherwise returns False.
         ---
         :return bool:
         """
@@ -340,11 +323,9 @@ class Plugin(indigo.PluginBase):
         Title Placeholder
         """
         debug_level = int(self.pluginPrefs.get('showDebugLevel', "30"))
-        time_stamp  = dt.datetime.now().strftime(fmt="%Y-%m-%d %H.%M")
+        time_stamp  = dt.datetime.now().strftime("%Y-%m-%d %H.%M")
         log_path    = indigo.server.getLogsFolderPath()
-        file_name   = (
-            f"{log_path}/com.fogbert.indigoplugin.bikeShare/{time_stamp} BikeShare data.txt"
-        )
+        file_name   = f"{log_path}/com.fogbert.indigoplugin.bikeShare/{time_stamp} BikeShare data.txt"
 
         with open(file_name, 'w', encoding="utf-8") as out_file:
             out_file.write("BikeShare Plugin Data\n")
@@ -361,8 +342,7 @@ class Plugin(indigo.PluginBase):
         """
         List of hours generator
 
-        Creates a list of times for use in setting the desired time for weather forecast emails to
-        be sent.
+        Creates a list of times for use in setting the desired time for weather forecast emails to be sent.
 
         :param str filter:
         :param indigo.Dict values_dict:
@@ -377,8 +357,7 @@ class Plugin(indigo.PluginBase):
         """
         Download the necessary JSON data from the bike sharing service
 
-        The get_bike_data action reaches out to the bike share server and downloads the JSON needed
-        data.
+        The get_bike_data action reaches out to the bike share server and downloads the JSON needed data.
 
         :return dict self.system_data:
         """
@@ -415,28 +394,7 @@ class Plugin(indigo.PluginBase):
         :param int target_id:
         :return:
         """
-        # # Download the latest systems list from GitHub and create a pandas dataframe.
-        # data_frame = pd.read_csv("https://raw.githubusercontent.com/NABSA/gbfs/master/systems.csv")
-        #
-        # # Make minor changes to the provided data for proper display.
-        # data_frame['Name'] = [n.lstrip(" ") for n in data_frame['Name']]
-        #
-        # # Create a new field: Name (Location)
-        # data_frame['Combined Name'] = data_frame['Name'] + " (" + data_frame['Location'] + ")"
-        #
-        # # Remove any leading spaces in URL values which Indigo doesn't like as a dropdown ID.
-        # data_frame['Auto-Discovery URL'] = data_frame['Auto-Discovery URL'].str.replace(" ", "")
-        #
-        # # Create a list of tuples for dropdown menu.
-        # services = zip(list(data_frame['Auto-Discovery URL']), list(data_frame['Combined Name']))
-        #
-        # # Convert iterator into list
-        # list_li = list(services)
-
-        # =============================================================================
-        # download the data.
-        with requests.get("https://raw.githubusercontent.com/NABSA/gbfs/master/systems.csv",
-                          timeout=10) as response:
+        with requests.get("https://raw.githubusercontent.com/NABSA/gbfs/master/systems.csv", timeout=10) as response:
             csv_dict = csv.DictReader(response.content.decode('utf-8').splitlines())
 
         # convert the DictReader object to a list because DictReader objects are not subscriptable.
@@ -444,11 +402,12 @@ class Plugin(indigo.PluginBase):
 
         # construct the combined name for a dropdown list.
         for system in new_dict:
-            system["Combined Name"] = system['Name'].lstrip(" ") + " (" + system['Location'] + ")"
+            name = system['Name'].lstrip(' ')
+            loc  = system['Location']
+            system["Combined Name"] = f"{name} ({loc})"
 
         # convert iterator into list and collapse any spaces in the URL field.
         list_li = [(_["Auto-Discovery URL"].replace(" ", ""), _["Combined Name"]) for _ in new_dict]
-        # =============================================================================
 
         # Percent-encode as much as possible.
         list_li = [(requests.utils.quote(k, safe="%:/"), v) for (k, v) in list_li]
@@ -457,7 +416,6 @@ class Plugin(indigo.PluginBase):
         num_systems = len(list_li)
 
         self.logger.debug(f"{num_systems} bike sharing systems available.")
-
         return sorted(list_li, key=lambda tup: tup[1].lower())
 
     # =============================================================================
@@ -465,8 +423,7 @@ class Plugin(indigo.PluginBase):
         """
         Create a list of bike sharing stations for dropdown menus
 
-        The get_station_list() method generates a sorted list of station names for use in device
-        config dialogs.
+        The get_station_list() method generates a sorted list of station names for use in device config dialogs.
 
         :param str filter:
         :param str type_id:
@@ -486,10 +443,9 @@ class Plugin(indigo.PluginBase):
         """
         Parse bike data for saving to custom device states
 
-        The parse_bike_data() method takes the JSON data (contained within 'self.system_data'
-        variable) and assigns values to relevant device states. In instances where the service
-        provides a null string value, the plugin assigns the value of "Not provided." to alert the
-        user to that fact.
+        The parse_bike_data() method takes the JSON data (contained within 'self.system_data' variable) and assigns
+        values to relevant device states. In instances where the service provides a null string value, the plugin
+        assigns the value of "Not provided." to alert the user to that fact.
 
         :param indigo.Device dev:
         :return:
@@ -507,13 +463,13 @@ class Plugin(indigo.PluginBase):
         for station in self.system_data['station_status']['data']['stations']:
             if station['station_id'] == station_id:
                 for key in (
-                        'is_renting',
-                        'is_returning',
-                        'num_bikes_available',
-                        'num_bikes_disabled',
-                        'num_docks_available',
-                        'num_docks_disabled',
-                        'num_ebikes_available',
+                    'is_renting',
+                    'is_returning',
+                    'num_bikes_available',
+                    'num_bikes_disabled',
+                    'num_docks_available',
+                    'num_docks_disabled',
+                    'num_ebikes_available',
                 ):
 
                     # Coerce select entries to bool
@@ -533,25 +489,18 @@ class Plugin(indigo.PluginBase):
 
                     diff_time = dt.datetime.now() - dt.datetime.fromtimestamp(last_report)
 
-                    # Sometimes the sharing service clock is ahead of the Indigo server clock.
-                    # Since the result can't be negative by definition, let's make it zero and
-                    # call it a day.
+                    # Sometimes the sharing service clock is ahead of the Indigo server clock. Since the result can't
+                    # be negative by definition, let's make it zero and call it a day.
                     time_diff = max(diff_time.total_seconds(), 0)
                     diff = dt.timedelta(seconds=time_diff)
                     diff_time_str = f"{diff}"
 
-                    states_list.append(
-                        {'key': 'last_reported', 'value': station.get(last_report_human, 'Unknown')}
-                    )
-                    states_list.append(
-                        {'key': 'dataAge', 'value': station.get(diff_time_str, 'Unknown')}
-                    )
+                    states_list.append({'key': 'last_reported', 'value': station.get(last_report_human, 'Unknown')})
+                    states_list.append({'key': 'dataAge', 'value': station.get(diff_time_str, 'Unknown')})
 
                 except Exception:  # noqa
                     self.logger.exception()
-                    states_list.append(
-                        {'key': 'dataAge', 'value': "Unknown", 'uiValue': "Unknown"}
-                    )
+                    states_list.append({'key': 'dataAge', 'value': "Unknown", 'uiValue': "Unknown"})
 
         dev.updateStatesOnServer(states_list)
 
@@ -560,9 +509,8 @@ class Plugin(indigo.PluginBase):
         """
         Process plugin triggers
 
-        The process_triggers method will examine the statusValue state of each device, determine
-        whether there is a trigger for any stations reported as not in service, and fire the
-        corresponding trigger.
+        The process_triggers method will examine the statusValue state of each device, determine whether there is a
+        trigger for any stations reported as not in service, and fire the corresponding trigger.
 
         :return:
         """
@@ -602,8 +550,8 @@ class Plugin(indigo.PluginBase):
         """
         Refresh bike data based on call from Indigo Action item
 
-        The refresh_bike_action method is used to trigger a data refresh cycle (get it?) when
-        requested by the user through an Indigo action.
+        The refresh_bike_action method is used to trigger a data refresh cycle (get it?) when requested by the user
+        through an Indigo action.
 
         :param indigo.Dict values_dict:
         :return:
@@ -615,10 +563,9 @@ class Plugin(indigo.PluginBase):
         """
         Refresh bike data based on a call from Indigo Plugin menu
 
-        This method refreshes bike data for all devices based on a plugin menu call. Note that this
-        method does not honor the "business hours" limitation, as it is assumed that--since the
-        user has requested an update--they are interested in getting one regardless of the time of
-        day.
+        This method refreshes bike data for all devices based on a plugin menu call. Note that this method does not
+        honor the "business hours" limitation, as it is assumed that--since the user has requested an update--they are
+        interested in getting one regardless of the time of day.
         """
 
         try:
@@ -630,9 +577,7 @@ class Plugin(indigo.PluginBase):
                 dev.stateListOrDisplayStateIdChanged()
 
                 if not dev.configured:
-                    indigo.server.log(
-                        f"[{dev.name}] Skipping device because it is not fully configured."
-                    )
+                    indigo.server.log(f"[{dev.name}] Skipping device because it is not fully configured.")
                     self.sleep(60)
 
                 elif dev.enabled:
@@ -642,14 +587,10 @@ class Plugin(indigo.PluginBase):
 
                             if dev.states['is_renting'] == 1:
                                 num_bikes = dev.states['num_bikes_available']
-                                states_list.append(
-                                    {'key': 'onOffState', 'value': True, 'uiValue': f"{num_bikes}"}
-                                )
+                                states_list.append({'key': 'onOffState', 'value': True, 'uiValue': f"{num_bikes}"})
                                 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
                             else:
-                                states_list.append(
-                                    {'key': 'onOffState', 'value': False, 'uiValue': "Not Renting"}
-                                )
+                                states_list.append({'key': 'onOffState', 'value': False, 'uiValue': "Not Renting"})
                                 dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
                         else:
@@ -658,11 +599,10 @@ class Plugin(indigo.PluginBase):
                             dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
                     except Exception:  # noqa
-                        states_list.append(
-                            {
-                                'key': 'onOffState',
-                                'value': False,
-                                'uiValue': f"{dev.states['num_bikes_available']}"
+                        states_list.append({
+                            'key': 'onOffState',
+                            'value': False,
+                            'uiValue': f"{dev.states['num_bikes_available']}"
                             },
                         )
                         dev.setErrorStateOnServer("Error")
@@ -670,17 +610,14 @@ class Plugin(indigo.PluginBase):
                         self.logger.debug("Sleeping until next scheduled poll.")
                         dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
-                    states_list.append(
-                        {
-                            'key': 'businessHours',
-                            'value': self.open_for_business,
-                            'uiValue': self.open_for_business
+                    states_list.append({
+                        'key': 'businessHours',
+                        'value': self.open_for_business,
+                        'uiValue': self.open_for_business
                         }
                     )
                     self.logger.info(f"[{dev.name}] Data refreshed.")
                     dev.updateStatesOnServer(states_list)
 
         except Exception:  # noqa
-            self.logger.exception(
-                "There was a problem refreshing the data. Will try on next cycle."
-            )
+            self.logger.exception("There was a problem refreshing the data. Will try on next cycle.")
