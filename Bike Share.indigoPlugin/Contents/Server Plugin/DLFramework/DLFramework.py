@@ -421,8 +421,8 @@ class evalExpr:  # noqa
         :return:
         """
 
-        # See https://stackoverflow.com/q/71353183/2827397 (and the accompanying answer) for an
-        # explanation of the code inspection warnings thrown by this method.
+        # See https://stackoverflow.com/q/71353183/2827397 (and the accompanying answer) for an explanation of the code
+        # inspection warnings thrown by this method.
         try:
             if isinstance(node, ast.Num):  # <number>
                 value = node.n

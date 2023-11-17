@@ -18,11 +18,12 @@ import datetime as dt
 import logging
 import csv
 import requests
+from requests import utils
 
 # Third-party modules
 try:
     import indigo  # noqa
-    import pydevd
+    # import pydevd  # noqa
 except ImportError:
     pass
 
@@ -37,7 +38,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'BikeShare Plugin for Indigo'
-__version__   = '2022.0.3'
+__version__   = '2023.0.1'
 
 
 # =============================================================================
@@ -47,7 +48,8 @@ class Plugin(indigo.PluginBase):
 
     :param indigo.PluginBase:
     """
-    def __init__(self, plugin_id="", plugin_display_name="", plugin_version="", plugin_prefs=None):
+    def __init__(self, plugin_id: str="", plugin_display_name: str="", plugin_version: str="",
+                 plugin_prefs: indigo.Dict=None):
         """
         Plugin initialization
 
@@ -110,7 +112,7 @@ class Plugin(indigo.PluginBase):
     # =============================================================================
     # =============================== Indigo Methods ===============================
     # =============================================================================
-    def closedPrefsConfigUi(self, values_dict=None, user_cancelled=False):  # noqa
+    def closed_prefs_config_ui(self, values_dict: indigo.Dict=None, user_cancelled: bool=False):
         """
         Standard Indigo method called when plugin preferences dialog is closed.
 
@@ -138,7 +140,7 @@ class Plugin(indigo.PluginBase):
         return values_dict
 
     # =============================================================================
-    def deviceStartComm(self, dev=None):  # noqa
+    def device_start_comm(self, dev: indigo.Device=None):  # noqa
         """
         Standard Indigo method when device comm is enabled
 
@@ -150,7 +152,7 @@ class Plugin(indigo.PluginBase):
 
     # =============================================================================
     @staticmethod
-    def deviceStopComm(dev=None):  # noqa
+    def device_stop_comm(dev: indigo.Device=None):  # noqa
         """
         Standard Indigo method when device comm is disabled
 
@@ -161,7 +163,7 @@ class Plugin(indigo.PluginBase):
         dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 
     # =============================================================================
-    def getPrefsConfigUiValues(self):  # noqa
+    def get_prefs_config_ui_values(self):  # noqa
         """
         Standard Indigo method for when plugin preferences dialog is opened
         """
@@ -180,7 +182,7 @@ class Plugin(indigo.PluginBase):
         return plugin_prefs
 
     # =============================================================================
-    def runConcurrentThread(self):  # noqa
+    def run_concurrent_thread(self):  # noqa
         """
         Standard Indigo method that runs continuously (if present)
         """
@@ -199,7 +201,7 @@ class Plugin(indigo.PluginBase):
 
     # =============================================================================
     @staticmethod
-    def sendDevicePing(dev_id=0, suppress_logging=False):  # noqa
+    def sendDevicePing(dev_id: int=0, suppress_logging: bool=False):  # noqa
         """
         Standard Indigo method for when plugin device receives a ping request
 
@@ -229,21 +231,21 @@ class Plugin(indigo.PluginBase):
         self.get_bike_data()
 
     # =============================================================================
-    def triggerStartProcessing(self, trigger):  # noqa
+    def trigger_start_processing(self, trigger: indigo.Trigger):  # noqa
         """
         Standard Indigo Method for trigger enabled
 
-        :param indigo.trigger trigger:
+        :param indigo.Trigger trigger:
         :return:
         """
         self.master_trigger_dict[trigger.pluginProps['listOfStations']] = trigger.id
 
     # =============================================================================
-    def triggerStopProcessing(self, trigger):  # noqa
+    def trigger_stop_processing(self, trigger=indigo.Trigger):  # noqa
         """
         Standard Indigo Method for trigger disabled
 
-        :param indigo.trigger trigger:
+        :param indigo.Trigger trigger:
         :return:
         """
 
@@ -294,7 +296,7 @@ class Plugin(indigo.PluginBase):
 
         comms_kill_all() sets the enabled status of all plugin devices to false.
         """
-        for dev in indigo.devices.itervalues("self"):
+        for dev in indigo.devices.iter(filter="self"):
             indigo.device.enable(dev, value=False)
 
     # =============================================================================
@@ -314,7 +316,7 @@ class Plugin(indigo.PluginBase):
 
         comms_unkill_all() sets the enabled status of all plugin devices to true.
         """
-        for dev in indigo.devices.itervalues("self"):
+        for dev in indigo.devices.iter(filter="self"):
             indigo.device.enable(dev, value=True)
 
     # =============================================================================
@@ -338,7 +340,7 @@ class Plugin(indigo.PluginBase):
 
     # =============================================================================
     @staticmethod
-    def generator_time(filter="", values_dict=None, type_id="", target_id=0):  # noqa
+    def generator_time(filter: str="", values_dict: indigo.Dict=None, type_id: str="", target_id: int=0):  # noqa
         """
         List of hours generator
 
@@ -384,7 +386,7 @@ class Plugin(indigo.PluginBase):
             self.logger.debug("Error: ", exc_info=True)
 
     # =============================================================================
-    def get_system_list(self, filter="", type_id=0, values_dict=None, target_id=0):  # noqa
+    def get_system_list(self, filter: str="", type_id: int=0, values_dict: indigo.Dict=None, target_id: int=0):  # noqa
         """
         Title Placeholder
 
@@ -419,7 +421,7 @@ class Plugin(indigo.PluginBase):
         return sorted(list_li, key=lambda tup: tup[1].lower())
 
     # =============================================================================
-    def get_station_list(self, filter="", type_id=0, values_dict=None, target_id=0):  # noqa
+    def get_station_list(self, filter: str="", type_id: int=0, values_dict: indigo.Dict=None, target_id: int=0):  # noqa
         """
         Create a list of bike sharing stations for dropdown menus
 
@@ -439,7 +441,7 @@ class Plugin(indigo.PluginBase):
         )
 
     # =============================================================================
-    def parse_bike_data(self, dev=None):
+    def parse_bike_data(self, dev: indigo.Device=None):
         """
         Parse bike data for saving to custom device states
 
@@ -515,7 +517,7 @@ class Plugin(indigo.PluginBase):
         :return:
         """
         try:
-            for dev in indigo.devices.itervalues(filter='self'):
+            for dev in indigo.devices.iter(filter='self'):
 
                 station_name   = dev.states['stationName']
                 station_status = dev.states['statusValue']
@@ -534,7 +536,7 @@ class Plugin(indigo.PluginBase):
             pass
 
     # =============================================================================
-    def refreshBikeAction(self, values_dict=None):  # noqa
+    def refreshBikeAction(self, values_dict: indigo.Device=None):  # noqa
         """
         The refreshBikeAction() method has been deprecated.
 
@@ -546,7 +548,7 @@ class Plugin(indigo.PluginBase):
         self.refresh_bike_action(values_dict=values_dict)
 
     # =============================================================================
-    def refresh_bike_action(self, values_dict=None):  # noqa
+    def refresh_bike_action(self, values_dict: indigo.Dict=None):  # noqa
         """
         Refresh bike data based on call from Indigo Action item
 
@@ -573,7 +575,7 @@ class Plugin(indigo.PluginBase):
 
             self.get_bike_data()
 
-            for dev in indigo.devices.itervalues("self"):
+            for dev in indigo.devices.iter(filter="self"):
                 dev.stateListOrDisplayStateIdChanged()
 
                 if not dev.configured:
