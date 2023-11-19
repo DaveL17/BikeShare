@@ -1,4 +1,8 @@
-### v2023.1.0
+### v2023.0.2
+-  Fixes bug where a race condition may occur if pluginPrefs have not yet been written to disk when the plugin is
+   first installed.
+
+### v2023.0.1
 -  Code enhancements.
 
 ### v2022.0.3

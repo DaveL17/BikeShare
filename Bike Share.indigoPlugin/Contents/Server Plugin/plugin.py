@@ -38,7 +38,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'BikeShare Plugin for Indigo'
-__version__   = '2023.0.1'
+__version__   = '2023.0.2'
 
 
 # =============================================================================
@@ -147,8 +147,9 @@ class Plugin(indigo.PluginBase):
         :param indigo.Device dev:
         :return:
         """
+        dev.updateStateOnServer('onOffState', value=False, uiValue="Starting")
+        self.refresh_bike_data()
         self.parse_bike_data(dev=dev)
-        dev.updateStateOnServer('onOffState', value=False, uiValue="Enabled")
 
     # =============================================================================
     @staticmethod
@@ -228,7 +229,7 @@ class Plugin(indigo.PluginBase):
         self.fogbert.audit_server_version(min_ver=2022)
 
         # Update system data
-        self.get_bike_data()
+        # self.get_bike_data()
 
     # =============================================================================
     def trigger_start_processing(self, trigger: indigo.Trigger):  # noqa
@@ -367,11 +368,17 @@ class Plugin(indigo.PluginBase):
 
         try:
             # Get the selected service from the plugin config dict.
-            lang = self.pluginPrefs.get('language')
-            auto_discovery_url = self.pluginPrefs.get('bike_system')
-            self.logger.debug(f"Auto-discovery URL: {auto_discovery_url}")
+            lang = self.pluginPrefs.get('language', 'en')
+            auto_discovery_url = self.pluginPrefs.get('bike_system', None)
+
+            # Waiting for pluginPrefs to be written to server upon first install.
+            while not auto_discovery_url:
+                self.sleep(4)
+                auto_discovery_url = self.pluginPrefs.get('bike_system', None)
+                self.logger.debug("Waiting for bike system data.")
 
             # Go and get the data from the bike sharing service.
+            self.logger.debug(f"Auto-discovery URL: {auto_discovery_url}")
             reply = requests.get(auto_discovery_url, timeout=15)
             for feed in reply.json()['data'][lang]['feeds']:
                 self.system_data[feed['name']] = requests.get(feed['url']).json()
@@ -576,6 +583,7 @@ class Plugin(indigo.PluginBase):
             self.get_bike_data()
 
             for dev in indigo.devices.iter(filter="self"):
+                dev.updateStateOnServer('onOffState', value=True, uiValue="Refreshing")
                 dev.stateListOrDisplayStateIdChanged()
 
                 if not dev.configured:
