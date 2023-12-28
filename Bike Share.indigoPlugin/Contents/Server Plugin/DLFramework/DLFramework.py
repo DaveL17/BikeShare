@@ -63,7 +63,7 @@ class Fogbert:
         self.pluginPrefs = plugin.pluginPrefs
 
         log_format = '%(asctime)s.%(msecs)03d\t%(levelname)-10s\t%(name)s.%(funcName)-28s %(msg)s'
-        self.plugin.plugin_file_handler.setFormatter( logging.Formatter(fmt=log_format, datefmt='%Y-%m-%d %H:%M:%S'))
+        self.plugin.plugin_file_handler.setFormatter(logging.Formatter(fmt=log_format, datefmt='%Y-%m-%d %H:%M:%S'))
 
     # =============================================================================
     def pluginEnvironment(self):  # noqa
@@ -439,8 +439,11 @@ class evalExpr:  # noqa
 
 
 class DummyClass:
-
-    def Dave(self, at1="foo", at2=0):
+    """
+    Dummy class used for testing.
+    """
+    @staticmethod
+    def dave(at1="foo", at2=0):
         """
         This docstring is loosely formatted to `PEP 287` with a nod towards PyCharm reStructured Text rendering.
 
