@@ -1,3 +1,6 @@
+### v2024.0.1
+- Adds unit test for refresh bike data action.
+
 ### v2023.0.2
 -  Fixes bug where a race condition may occur if pluginPrefs have not yet been written to disk when the plugin is
    first installed.

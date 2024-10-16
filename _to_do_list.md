@@ -1,5 +1,2 @@
-### TODO
-- Move system choice from plugin config to device (then users can manage multiple systems).
-- What happens when a system goes away?
-- It looks like you have to restart the plugin when the service is changed in order for the new service to be picked up.
-.
+- migrate from `requests` to `httpx`. This is a bit involved since we're using `requests` to do more than just get.
+- on startup, the plugin updates devices three times

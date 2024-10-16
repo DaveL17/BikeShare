@@ -23,7 +23,7 @@ from requests import utils
 # Third-party modules
 try:
     import indigo  # noqa
-    # import pydevd  # noqa
+    import pydevd  # noqa
 except ImportError:
     pass
 
@@ -38,7 +38,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'BikeShare Plugin for Indigo'
-__version__   = '2023.0.2'
+__version__   = '2023.0.3'
 
 
 # =============================================================================
@@ -48,8 +48,8 @@ class Plugin(indigo.PluginBase):
 
     :param indigo.PluginBase:
     """
-    def __init__(self, plugin_id: str="", plugin_display_name: str="", plugin_version: str="",
-                 plugin_prefs: indigo.Dict=None):
+    def __init__(self, plugin_id: str = "", plugin_display_name: str = "", plugin_version: str = "",
+                 plugin_prefs: indigo.Dict = None):
         """
         Plugin initialization
 
@@ -70,8 +70,7 @@ class Plugin(indigo.PluginBase):
         self.system_data             = {}
 
         # =============================== Debug Logging ================================
-        log_format = '%(asctime)s.%(msecs)03d\t%(levelname)-10s\t%(name)s.%(funcName)-28s %(message)s'
-        self.plugin_file_handler.setFormatter(logging.Formatter(log_format, datefmt='%Y-%m-%d %H:%M:%S'))
+        self.plugin_file_handler.setFormatter(logging.Formatter(Dave.LOG_FORMAT, datefmt='%Y-%m-%d %H:%M:%S'))
         self.debug_level = int(self.pluginPrefs.get('showDebugLevel', "30"))
 
         # Convert debugLevel scale to new scale
@@ -87,10 +86,10 @@ class Plugin(indigo.PluginBase):
         self.fogbert = Dave.Fogbert(self)
 
         # ============================= Remote Debugging ==============================
-        # try:
-        #     pydevd.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)
-        # except:
-        #     pass
+        try:
+            pydevd.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)
+        except:
+            pass
 
         self.plugin_is_initializing = False
 
@@ -112,7 +111,7 @@ class Plugin(indigo.PluginBase):
     # =============================================================================
     # =============================== Indigo Methods ===============================
     # =============================================================================
-    def closed_prefs_config_ui(self, values_dict: indigo.Dict=None, user_cancelled: bool=False):
+    def closed_prefs_config_ui(self, values_dict: indigo.Dict = None, user_cancelled: bool = False):
         """
         Standard Indigo method called when plugin preferences dialog is closed.
 
@@ -140,7 +139,7 @@ class Plugin(indigo.PluginBase):
         return values_dict
 
     # =============================================================================
-    def device_start_comm(self, dev: indigo.Device=None):  # noqa
+    def device_start_comm(self, dev: indigo.Device = None):  # noqa
         """
         Standard Indigo method when device comm is enabled
 
@@ -148,12 +147,14 @@ class Plugin(indigo.PluginBase):
         :return:
         """
         dev.updateStateOnServer('onOffState', value=False, uiValue="Starting")
-        self.refresh_bike_data()
+        # We send a copy of the device to the refresh_bike_data method here so that the plugin doesn't do a global
+        # update of all devices for each device started.
+        self.refresh_bike_data(device=dev, force=True)
         self.parse_bike_data(dev=dev)
 
     # =============================================================================
     @staticmethod
-    def device_stop_comm(dev: indigo.Device=None):  # noqa
+    def device_stop_comm(dev: indigo.Device = None):  # noqa
         """
         Standard Indigo method when device comm is disabled
 
@@ -192,9 +193,9 @@ class Plugin(indigo.PluginBase):
         try:
             while True:
                 if self.business_hours():
-                    self.download_interval = int(self.pluginPrefs.get('downloadInterval', 900))
-                    self.refresh_bike_data()
+                    self.refresh_bike_data(force=False)
                     self.process_triggers()
+                self.download_interval = int(self.pluginPrefs.get('downloadInterval', 900))
                 self.sleep(self.download_interval)
 
         except self.StopThread:
@@ -202,7 +203,7 @@ class Plugin(indigo.PluginBase):
 
     # =============================================================================
     @staticmethod
-    def sendDevicePing(dev_id: int=0, suppress_logging: bool=False):  # noqa
+    def sendDevicePing(dev_id: int = 0, suppress_logging: bool = False):  # noqa
         """
         Standard Indigo method for when plugin device receives a ping request
 
@@ -228,9 +229,6 @@ class Plugin(indigo.PluginBase):
         # =========================== Audit Indigo Version ============================
         self.fogbert.audit_server_version(min_ver=2022)
 
-        # Update system data
-        # self.get_bike_data()
-
     # =============================================================================
     def trigger_start_processing(self, trigger: indigo.Trigger):  # noqa
         """
@@ -242,7 +240,7 @@ class Plugin(indigo.PluginBase):
         self.master_trigger_dict[trigger.pluginProps['listOfStations']] = trigger.id
 
     # =============================================================================
-    def trigger_stop_processing(self, trigger=indigo.Trigger):  # noqa
+    def trigger_stop_processing(self, trigger = indigo.Trigger):  # noqa
         """
         Standard Indigo Method for trigger disabled
 
@@ -341,7 +339,7 @@ class Plugin(indigo.PluginBase):
 
     # =============================================================================
     @staticmethod
-    def generator_time(filter: str="", values_dict: indigo.Dict=None, type_id: str="", target_id: int=0):  # noqa
+    def generator_time(filter: str = "", values_dict: indigo.Dict = None, type_id: str = "", target_id: int = 0):  # noqa
         """
         List of hours generator
 
@@ -393,7 +391,7 @@ class Plugin(indigo.PluginBase):
             self.logger.debug("Error: ", exc_info=True)
 
     # =============================================================================
-    def get_system_list(self, filter: str="", type_id: int=0, values_dict: indigo.Dict=None, target_id: int=0):  # noqa
+    def get_system_list(self, filter: str = "", type_id: int = 0, values_dict: indigo.Dict = None, target_id: int = 0) -> list:  # noqa
         """
         Title Placeholder
 
@@ -428,7 +426,7 @@ class Plugin(indigo.PluginBase):
         return sorted(list_li, key=lambda tup: tup[1].lower())
 
     # =============================================================================
-    def get_station_list(self, filter: str="", type_id: int=0, values_dict: indigo.Dict=None, target_id: int=0):  # noqa
+    def get_station_list(self, filter: str = "", type_id: int = 0, values_dict: indigo.Dict = None, target_id: int = 0):  # noqa
         """
         Create a list of bike sharing stations for dropdown menus
 
@@ -441,14 +439,10 @@ class Plugin(indigo.PluginBase):
         :return list:
         """
         station_information = self.system_data['station_information']['data']['stations']
-
-        return sorted(
-            [(key['station_id'], key['name']) for key
-             in station_information], key=lambda x: x[-1]
-        )
+        return sorted([(key['station_id'], key['name']) for key in station_information], key=lambda x: x[-1])
 
     # =============================================================================
-    def parse_bike_data(self, dev: indigo.Device=None):
+    def parse_bike_data(self, dev: indigo.Device = None):
         """
         Parse bike data for saving to custom device states
 
@@ -460,7 +454,7 @@ class Plugin(indigo.PluginBase):
         :return:
         """
         states_list = []
-        station_id = dev.pluginProps['stationName']
+        station_id  = dev.pluginProps['stationName']
 
         # Station information
         for station in self.system_data['station_information']['data']['stations']:
@@ -530,8 +524,7 @@ class Plugin(indigo.PluginBase):
                 station_status = dev.states['statusValue']
                 if station_name in self.master_trigger_dict:
 
-                    # This relies on all services reporting status value of 'In Service' when
-                    # things are normal.
+                    # This relies on all services reporting status value of 'In Service' when things are normal.
                     if station_status != 'In Service':
                         trigger_id = self.master_trigger_dict[station_name]
 
@@ -543,7 +536,7 @@ class Plugin(indigo.PluginBase):
             pass
 
     # =============================================================================
-    def refreshBikeAction(self, values_dict: indigo.Device=None):  # noqa
+    def refreshBikeAction(self, values_dict: indigo.Device = None):  # noqa
         """
         The refreshBikeAction() method has been deprecated.
 
@@ -555,7 +548,7 @@ class Plugin(indigo.PluginBase):
         self.refresh_bike_action(values_dict=values_dict)
 
     # =============================================================================
-    def refresh_bike_action(self, values_dict: indigo.Dict=None):  # noqa
+    def refresh_bike_action(self, values_dict: indigo.Dict = None):  # noqa
         """
         Refresh bike data based on call from Indigo Action item
 
@@ -568,7 +561,7 @@ class Plugin(indigo.PluginBase):
         self.refresh_bike_data()
 
     # =============================================================================
-    def refresh_bike_data(self):
+    def refresh_bike_data(self, device=None, force: bool = False) -> None:
         """
         Refresh bike data based on a call from Indigo Plugin menu
 
@@ -583,6 +576,21 @@ class Plugin(indigo.PluginBase):
             self.get_bike_data()
 
             for dev in indigo.devices.iter(filter="self"):
+                # If the caller has provided a device and the device provided is not the iterated device, we skip it.
+                # This is to ensure that the refresh_bike_data method isn't run for each existing device when
+                # device_start_comm is called (it's the only place that provides a specific device instance).
+                if device and device.id != dev.id:
+                    continue
+
+                # determine if a device update is needed
+                date_diff = (dt.datetime.now() - dev.lastChanged).total_seconds()
+                time_to_refresh = date_diff > (int(self.pluginPrefs['downloadInterval'] - 5))
+
+                # It's not time to refresh devices yet. If force is True, we go ahead and update the device anyway.
+                if not force or time_to_refresh:
+                    self.logger.debug("Not time to refresh devices.")
+                    return
+
                 dev.updateStateOnServer('onOffState', value=True, uiValue="Refreshing")
                 dev.stateListOrDisplayStateIdChanged()
 
@@ -631,3 +639,22 @@ class Plugin(indigo.PluginBase):
 
         except Exception:  # noqa
             self.logger.exception("There was a problem refreshing the data. Will try on next cycle.")
+
+    def my_tests(self, action: indigo.PluginAction = None) -> None:
+        """
+        The main unit test method
+
+        The my_tests method is called from a plugin action item and, when called, imports all unit tests and runs them.
+        If the unit test module returns True, then all tests have passed.
+        """
+        from Tests import test_plugin  # test_devices
+        tests = test_plugin.TestPlugin()
+        if tests.test_plugin_action(self):
+            self.logger.warning("Plugin action tests passed.")
+        if tests.test_get_system_list(self):
+            self.logger.warning("Get system list tests passed.")
+        if tests.test_get_station_list(self):
+            self.logger.warning("Get station list tests passed.")
+        if tests.test_get_bike_data(self):
+            self.logger.warning("Get bike data tests passed.")
+

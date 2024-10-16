@@ -4,4 +4,8 @@
 		<Name>Refresh Bike Data</Name>
 		<CallbackMethod>refresh_bike_action</CallbackMethod>
 	</Action>
+	<Action id="my_tests" uiPath="hidden">
+		<Name>Run All Tests</Name>
+		<CallbackMethod>my_tests</CallbackMethod>
+	</Action>
 </Actions>
