@@ -53,6 +53,14 @@
     </List>
   </Field>
 
+  <Field id="ui_state" type="menu" defaultValue="num_bikes" tooltip="Select how data are presented in the main Indigo UI.">
+    <Label>Display State:</Label>
+    <List>
+      <Option value="num_bikes">Bikes Available (3)</Option>
+      <Option value="num_bikes_num_docks">Bikes Available/Docks Available (3/10)</Option>
+    </List>
+  </Field>
+
   <Field id="start_time" type="menu" defaultValue="00:00" tooltip="">
     <Label>Update Between:</Label>
       <List class="self" filter="" method="generator_time"/>

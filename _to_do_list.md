@@ -1,2 +1,1 @@
-- migrate from `requests` to `httpx`. This is a bit involved since we're using `requests` to do more than just get.
-- on startup, the plugin updates devices three times
+- migrate from `requests` to `httpx`. This is a bit involved since we're using `requests` to do more than just a get.

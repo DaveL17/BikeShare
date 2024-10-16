@@ -133,6 +133,8 @@ class Plugin(indigo.PluginBase):
             self.download_interval = int(values_dict.get('downloadInterval', 15))
             self.logger.debug("Plugin prefs saved.")
 
+            self.refresh_bike_data()
+
         else:
             self.logger.debug("Plugin prefs cancelled.")
 
@@ -377,7 +379,7 @@ class Plugin(indigo.PluginBase):
 
             # Go and get the data from the bike sharing service.
             self.logger.debug(f"Auto-discovery URL: {auto_discovery_url}")
-            reply = requests.get(auto_discovery_url, timeout=15)
+            reply = requests.get(auto_discovery_url, timeout=10)
             for feed in reply.json()['data'][lang]['feeds']:
                 self.system_data[feed['name']] = requests.get(feed['url']).json()
             return self.system_data
@@ -604,8 +606,11 @@ class Plugin(indigo.PluginBase):
                             self.parse_bike_data(dev)
 
                             if dev.states['is_renting'] == 1:
-                                num_bikes = dev.states['num_bikes_available']
-                                states_list.append({'key': 'onOffState', 'value': True, 'uiValue': f"{num_bikes}"})
+                                if self.pluginPrefs.get('ui_state', 'num_bikes') == 'num_bikes':
+                                    display_val = f"{dev.states['num_bikes_available']}"
+                                else:
+                                    display_val = f"{dev.states['num_bikes_available']} / {dev.states['num_docks_available']}"
+                                states_list.append({'key': 'onOffState', 'value': True, 'uiValue': f"{display_val}"})
                                 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
                             else:
                                 states_list.append({'key': 'onOffState', 'value': False, 'uiValue': "Not Renting"})
