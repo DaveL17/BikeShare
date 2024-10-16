@@ -38,7 +38,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'BikeShare Plugin for Indigo'
-__version__   = '2023.0.3'
+__version__   = '2024.1.1'
 
 
 # =============================================================================
