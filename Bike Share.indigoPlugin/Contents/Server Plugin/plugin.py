@@ -21,11 +21,7 @@ import requests
 from requests import utils
 
 # Third-party modules
-try:
-    import indigo  # noqa
-    import pydevd  # noqa
-except ImportError:
-    pass
+import indigo  # noqa
 
 # My modules
 import DLFramework.DLFramework as Dave
@@ -84,12 +80,6 @@ class Plugin(indigo.PluginBase):
 
         # ========================== Initialize DLFramework ===========================
         self.fogbert = Dave.Fogbert(self)
-
-        # ============================= Remote Debugging ==============================
-        try:
-            pydevd.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True, suspend=False)
-        except:
-            pass
 
         self.plugin_is_initializing = False
 
