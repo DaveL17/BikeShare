@@ -21,10 +21,10 @@ except ImportError:
 # =================================== HEADER ==================================
 __author__ = "DaveL17"
 __build__ = "Unused"
-__copyright__ = "Copyright 2024 DaveL17"
+__copyright__ = "Copyright 2025 DaveL17"
 __license__ = "MIT"
 __title__ = "DLFramework"
-__version__ = "0.1.08"
+__version__ = "0.1.09"
 
 # supported operators for eval expressions
 OPERATORS = {
@@ -65,6 +65,7 @@ class Fogbert:
         self.plugin.plugin_file_handler.setFormatter(logging.Formatter(fmt=LOG_FORMAT, datefmt='%Y-%m-%d %H:%M:%S'))
 
     def environment(self) -> str:
+        """PLACEHOLDER"""
         self.plugin.logger.debug("DLFramework pluginEnvironment method called.")
         environment_state = ""
         spacer = " " * 35
@@ -145,14 +146,13 @@ class Fogbert:
         if debug_val in ["High", "Medium", "Low"]:
             match debug_val:
                 case "High":
-                    debug_val = 3
+                    return 3
                 case "Medium":
-                    debug_val = 2
+                    return 2
                 case _:
-                    debug_val = 1
-
-        return debug_val
-
+                    return 1
+        else:
+            return 1
     # =============================================================================
     @staticmethod
     def deviceList(dev_filter: str = "") -> list:  # noqa
@@ -430,3 +430,4 @@ class evalExpr:  # noqa
             return value
         except (TypeError, KeyError):
             self.plugin.logger.critical("That expression is not allowed.")
+            return None

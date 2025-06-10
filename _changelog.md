@@ -1,3 +1,7 @@
+### v2025.0.1
+- Transitions from `requests` to `httpx`.
+- Stability and performance improvements.
+
 ### v2024.0.1
 - Adds unit test for refresh bike data action.
 

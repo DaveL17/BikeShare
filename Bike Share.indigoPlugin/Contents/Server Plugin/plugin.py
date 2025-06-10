@@ -17,24 +17,24 @@ this plugin, please feel free to post to the BikeShare Plugin forum on the Indig
 import datetime as dt
 import logging
 import csv
-import requests
-from requests import utils
+from urllib.parse import quote
 
 # Third-party modules
+import httpx  # httpx is automatically installed by the Indigo installer
 import indigo  # noqa
 
 # My modules
 import DLFramework.DLFramework as Dave
-from constants import *  # noqa
+from constants import DEBUG_LABELS               # noqa
 from plugin_defaults import kDefaultPluginPrefs  # noqa
-# =================================== HEADER ==================================
 
+# =================================== HEADER ==================================
 __author__    = Dave.__author__
 __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'BikeShare Plugin for Indigo'
-__version__   = '2024.1.2'
+__version__   = '2025.1.0'
 
 
 # =============================================================================
@@ -326,7 +326,7 @@ class Plugin(indigo.PluginBase):
             out_file.write(f"{self.system_data}")
 
         self.indigo_log_handler.setLevel(20)
-        self.logger.info(f"Data written to {file_name}")
+        self.logger.info("Data written to %s", file_name)
         self.indigo_log_handler.setLevel(debug_level)
 
     # =============================================================================
@@ -368,19 +368,27 @@ class Plugin(indigo.PluginBase):
                 self.logger.debug("Waiting for bike system data.")
 
             # Go and get the data from the bike sharing service.
-            self.logger.debug(f"Auto-discovery URL: {auto_discovery_url}")
-            reply = requests.get(auto_discovery_url, timeout=10)
+            self.logger.debug("Auto-discovery URL: %s", auto_discovery_url)
+            reply = httpx.get(auto_discovery_url, timeout=10)
             for feed in reply.json()['data'][lang]['feeds']:
-                self.system_data[feed['name']] = requests.get(feed['url']).json()
+                self.system_data[feed['name']] = httpx.get(feed['url'], timeout=10).json()
             return self.system_data
 
         # ======================== Communication Error Handling ========================
-        except requests.exceptions.ConnectionError:
-            self.logger.exception("Connection Error. Will try again later.")
+        except httpx.HTTPStatusError:
+            self.logger.exception("Status Error. Will try again later.")
+            self.logger.debug(f"HTTPX HTTPStatusError: ", exc_info=True)
+            return None
+
+        except httpx.RequestError:
+            self.logger.exception("Request Error. Will try again later.")
+            self.logger.debug(f"HTTPX RequestError: ", exc_info=True)
+            return None
 
         except Exception:  # noqa
             self.logger.exception("General exception.")
-            self.logger.debug("Error: ", exc_info=True)
+            self.logger.debug("General Error: ", exc_info=True)
+            return None
 
     # =============================================================================
     def get_system_list(self, filter: str = "", type_id: int = 0, values_dict: indigo.Dict = None, target_id: int = 0) -> list:  # noqa
@@ -393,29 +401,41 @@ class Plugin(indigo.PluginBase):
         :param int target_id:
         :return:
         """
-        with requests.get("https://raw.githubusercontent.com/NABSA/gbfs/master/systems.csv", timeout=10) as response:
-            csv_dict = csv.DictReader(response.content.decode('utf-8').splitlines())
+        try:
+            # with httpx.get("https://raw.githubusercontent.com/NABSA/gbfs/master/systems.csv", timeout=10) as response:
+            #     csv_dict = csv.DictReader(response.content.decode('utf-8').splitlines())
 
-        # convert the DictReader object to a list because DictReader objects are not subscriptable.
-        new_dict = list(csv_dict)
+            # DaveL17 2025-06-010 Replace the requests quote wrapper. httpx doesn't support the `with` statement.
+            response = httpx.get("https://raw.githubusercontent.com/NABSA/gbfs/master/systems.csv", timeout=10)
+            response.raise_for_status()  # Raises an exception for bad status codes
+            csv_dict = csv.DictReader(response.content.decode("utf-8").splitlines())
 
-        # construct the combined name for a dropdown list.
-        for system in new_dict:
-            name = system['Name'].lstrip(' ')
-            loc  = system['Location']
-            system["Combined Name"] = f"{name} ({loc})"
+            # convert the DictReader object to a list because DictReader objects are not subscriptable.
+            new_dict = list(csv_dict)
 
-        # convert iterator into list and collapse any spaces in the URL field.
-        list_li = [(_["Auto-Discovery URL"].replace(" ", ""), _["Combined Name"]) for _ in new_dict]
+            # construct the combined name for a dropdown list.
+            for system in new_dict:
+                name = system['Name'].lstrip(' ')
+                loc  = system['Location']
+                system["Combined Name"] = f"{name} ({loc})"
 
-        # Percent-encode as much as possible.
-        list_li = [(requests.utils.quote(k, safe="%:/"), v) for (k, v) in list_li]
+            # convert iterator into list and collapse any spaces in the URL field.
+            list_li = [(_["Auto-Discovery URL"].replace(" ", ""), _["Combined Name"]) for _ in new_dict]
 
-        # Log the number of available systems.
-        num_systems = len(list_li)
+            # Percent-encode as much as possible.
+            # DaveL17 2025-06-010 Replace the requests quote wrapper.
+            # list_li = [(requests.utils.quote(k, safe="%:/"), v) for (k, v) in list_li]
+            list_li = [(quote(k, safe="%:/"), v) for (k, v) in list_li]
 
-        self.logger.debug(f"{num_systems} bike sharing systems available.")
-        return sorted(list_li, key=lambda tup: tup[1].lower())
+            # Log the number of available systems.
+            num_systems = len(list_li)
+
+            self.logger.debug("%s bike sharing systems available.", num_systems)
+            return sorted(list_li, key=lambda tup: tup[1].lower())
+
+        except httpx.HTTPStatusError:
+            self.logger.exception("Status Error. Will try again later.")
+            self.logger.debug(f"HTTPX HTTPStatusError: ", exc_info=True)
 
     # =============================================================================
     def get_station_list(self, filter: str = "", type_id: int = 0, values_dict: indigo.Dict = None, target_id: int = 0):  # noqa
@@ -629,7 +649,7 @@ class Plugin(indigo.PluginBase):
                         'uiValue': self.open_for_business
                         }
                     )
-                    self.logger.info(f"[{dev.name}] Data refreshed.")
+                    self.logger.info("[%s] Data refreshed.", dev.name)
                     dev.updateStatesOnServer(states_list)
 
         except Exception:  # noqa
@@ -652,4 +672,3 @@ class Plugin(indigo.PluginBase):
             self.logger.warning("Get station list tests passed.")
         if tests.test_get_bike_data(self):
             self.logger.warning("Get bike data tests passed.")
-
