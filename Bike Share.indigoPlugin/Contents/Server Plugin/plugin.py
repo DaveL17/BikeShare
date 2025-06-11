@@ -268,6 +268,8 @@ class Plugin(indigo.PluginBase):
             value = False
 
         self.open_for_business = value
+        for dev in indigo.devices.iter("self"):
+            dev.updateStateOnServer('businessHours', value=value)
         return value
 
     # =============================================================================
@@ -510,11 +512,12 @@ class Plugin(indigo.PluginBase):
                     diff = dt.timedelta(seconds=time_diff)
                     diff_time_str = f"{diff}"
 
-                    states_list.append({'key': 'last_reported', 'value': station.get(last_report_human, 'Unknown')})
-                    states_list.append({'key': 'dataAge', 'value': station.get(diff_time_str, 'Unknown')})
+                    states_list.append({'key': 'last_reported', 'value': last_report_human})
+                    states_list.append({'key': 'dataAge', 'value': diff_time_str})
 
                 except Exception:  # noqa
                     self.logger.exception()
+                    states_list.append({'key': 'last_reported', 'value': "Unknown", 'uiValue': "Unknown"})
                     states_list.append({'key': 'dataAge', 'value': "Unknown", 'uiValue': "Unknown"})
 
         dev.updateStatesOnServer(states_list)

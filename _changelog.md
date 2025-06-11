@@ -1,4 +1,5 @@
-### v2025.0.1
+### v2025.1.0
+- Fixes bug where `dataAge` and `last_reported` return "Unknown".
 - Transitions from `requests` to `httpx`.
 - Stability and performance improvements.
 
