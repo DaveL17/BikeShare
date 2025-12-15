@@ -34,7 +34,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'BikeShare Plugin for Indigo'
-__version__   = '2025.1.0'
+__version__   = '2025.2.0'
 
 
 # =============================================================================
@@ -328,7 +328,7 @@ class Plugin(indigo.PluginBase):
             out_file.write(f"{self.system_data}")
 
         self.indigo_log_handler.setLevel(20)
-        self.logger.info("Data written to %s", file_name)
+        self.logger.info("Data written to %s" % file_name)
         self.indigo_log_handler.setLevel(debug_level)
 
     # =============================================================================
@@ -370,7 +370,7 @@ class Plugin(indigo.PluginBase):
                 self.logger.debug("Waiting for bike system data.")
 
             # Go and get the data from the bike sharing service.
-            self.logger.debug("Auto-discovery URL: %s", auto_discovery_url)
+            self.logger.debug("Auto-discovery URL: %s" % auto_discovery_url)
             reply = httpx.get(auto_discovery_url, timeout=10)
             for feed in reply.json()['data'][lang]['feeds']:
                 self.system_data[feed['name']] = httpx.get(feed['url'], timeout=10).json()
@@ -379,12 +379,12 @@ class Plugin(indigo.PluginBase):
         # ======================== Communication Error Handling ========================
         except httpx.HTTPStatusError:
             self.logger.exception("Status Error. Will try again later.")
-            self.logger.debug(f"HTTPX HTTPStatusError: ", exc_info=True)
+            self.logger.debug("HTTPX HTTPStatusError: ", exc_info=True)
             return None
 
         except httpx.RequestError:
             self.logger.exception("Request Error. Will try again later.")
-            self.logger.debug(f"HTTPX RequestError: ", exc_info=True)
+            self.logger.debug("HTTPX RequestError: ", exc_info=True)
             return None
 
         except Exception:  # noqa
@@ -432,12 +432,12 @@ class Plugin(indigo.PluginBase):
             # Log the number of available systems.
             num_systems = len(list_li)
 
-            self.logger.debug("%s bike sharing systems available.", num_systems)
+            self.logger.debug("%s bike sharing systems available." % num_systems)
             return sorted(list_li, key=lambda tup: tup[1].lower())
 
         except httpx.HTTPStatusError:
             self.logger.exception("Status Error. Will try again later.")
-            self.logger.debug(f"HTTPX HTTPStatusError: ", exc_info=True)
+            self.logger.debug("HTTPX HTTPStatusError: ", exc_info=True)
 
     # =============================================================================
     def get_station_list(self, filter: str = "", type_id: int = 0, values_dict: indigo.Dict = None, target_id: int = 0):  # noqa
@@ -615,14 +615,17 @@ class Plugin(indigo.PluginBase):
 
                 elif dev.enabled:
                     try:
+                        num_bikes = dev.states['num_bikes_available']
+                        num_docks = dev.states['num_docks_available']
+
                         if self.system_data:
                             self.parse_bike_data(dev)
 
                             if dev.states['is_renting'] == 1:
                                 if self.pluginPrefs.get('ui_state', 'num_bikes') == 'num_bikes':
-                                    display_val = f"{dev.states['num_bikes_available']}"
+                                    display_val = f"{num_bikes}"
                                 else:
-                                    display_val = f"{dev.states['num_bikes_available']} / {dev.states['num_docks_available']}"
+                                    display_val = f"{num_bikes} / {num_docks}"
                                 states_list.append({'key': 'onOffState', 'value': True, 'uiValue': f"{display_val}"})
                                 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
                             else:
@@ -652,13 +655,13 @@ class Plugin(indigo.PluginBase):
                         'uiValue': self.open_for_business
                         }
                     )
-                    self.logger.info("[%s] Data refreshed.", dev.name)
+                    self.logger.info("[%s] Data refreshed." % dev.name)
                     dev.updateStatesOnServer(states_list)
 
         except Exception:  # noqa
             self.logger.exception("There was a problem refreshing the data. Will try on next cycle.")
 
-    def my_tests(self, action: indigo.PluginAction = None) -> None:
+    def my_tests(self, action: indigo.PluginAction = None) -> None:  # noqa
         """
         The main unit test method
 

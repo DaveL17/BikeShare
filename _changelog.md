@@ -1,7 +1,8 @@
 ### v2025.1.0
-- Fixes bug where `dataAge` and `last_reported` return "Unknown".
+- Fixes bug where `dataAge` and `last_reported` returned "Unknown".
 - Transitions from `requests` to `httpx`.
 - Stability and performance improvements.
+- Code cleanup
 
 ### v2024.0.1
 - Adds unit test for refresh bike data action.
