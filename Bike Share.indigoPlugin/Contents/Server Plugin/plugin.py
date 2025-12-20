@@ -672,6 +672,8 @@ class Plugin(indigo.PluginBase):
         tests = test_plugin.TestPlugin()
         if tests.test_plugin_action(self):
             self.logger.warning("Plugin action tests passed.")
+        if tests.test_plugin_trigger(self):
+            self.logger.warning("Plugin trigger tests passed.")
         if tests.test_get_system_list(self):
             self.logger.warning("Get system list tests passed.")
         if tests.test_get_station_list(self):
