@@ -17,6 +17,7 @@ this plugin, please feel free to post to the BikeShare Plugin forum on the Indig
 import datetime as dt
 import logging
 import csv
+from typing import Optional
 from urllib.parse import quote
 
 # Third-party modules
@@ -39,20 +40,16 @@ __version__   = '2025.2.0'
 
 # =============================================================================
 class Plugin(indigo.PluginBase):
-    """
-    Standard Indigo Plugin Class
-
-    :param indigo.PluginBase:
-    """
+    """Standard Indigo Plugin Class."""
     def __init__(self, plugin_id: str = "", plugin_display_name: str = "", plugin_version: str = "",
-                 plugin_prefs: indigo.Dict = None):
-        """
-        Plugin initialization
+                 plugin_prefs: Optional[indigo.Dict] = None):
+        """Plugin initialization.
 
-        :param str plugin_id:
-        :param str plugin_display_name:
-        :param str plugin_version:
-        :param indigo.Dict plugin_prefs:
+        Args:
+            plugin_id (str): The plugin's unique identifier.
+            plugin_display_name (str): The plugin's display name.
+            plugin_version (str): The plugin's version string.
+            plugin_prefs (indigo.Dict): The plugin's stored preferences.
         """
         super().__init__(plugin_id, plugin_display_name, plugin_version, plugin_prefs)
 
@@ -84,30 +81,27 @@ class Plugin(indigo.PluginBase):
         self.plugin_is_initializing = False
 
     # =============================================================================
-    def log_plugin_environment(self):
-        """
-        Log pluginEnvironment information when plugin is first started
-        """
+    def log_plugin_environment(self) -> None:
+        """Log pluginEnvironment information when plugin is first started."""
         self.fogbert.pluginEnvironment()
 
     # =============================================================================
-    def __del__(self):
-        """
-        Title Placeholder
-        :return:
-        """
+    def __del__(self) -> None:
+        """Clean up plugin instance."""
         indigo.PluginBase.__del__(self)
 
     # =============================================================================
     # =============================== Indigo Methods ===============================
     # =============================================================================
-    def closed_prefs_config_ui(self, values_dict: indigo.Dict = None, user_cancelled: bool = False):
-        """
-        Standard Indigo method called when plugin preferences dialog is closed.
+    def closed_prefs_config_ui(self, values_dict: Optional[indigo.Dict] = None, user_cancelled: bool = False) -> indigo.Dict:
+        """Standard Indigo method called when plugin preferences dialog is closed.
 
-        :param indigo.Dict values_dict:
-        :param bool user_cancelled:
-        :return:
+        Args:
+            values_dict (indigo.Dict): The values from the preferences dialog.
+            user_cancelled (bool): True if the user cancelled the dialog.
+
+        Returns:
+            indigo.Dict: The values dict.
         """
         if not user_cancelled:
             # Ensure that self.pluginPrefs includes any recent changes.
@@ -131,12 +125,11 @@ class Plugin(indigo.PluginBase):
         return values_dict
 
     # =============================================================================
-    def device_start_comm(self, dev: indigo.Device = None):  # noqa
-        """
-        Standard Indigo method when device comm is enabled
+    def device_start_comm(self, dev: Optional[indigo.Device] = None) -> None:  # noqa
+        """Standard Indigo method when device comm is enabled.
 
-        :param indigo.Device dev:
-        :return:
+        Args:
+            dev (indigo.Device): The Indigo device instance.
         """
         dev.updateStateOnServer('onOffState', value=False, uiValue="Starting")
         # We send a copy of the device to the refresh_bike_data method here so that the plugin doesn't do a global
@@ -146,20 +139,21 @@ class Plugin(indigo.PluginBase):
 
     # =============================================================================
     @staticmethod
-    def device_stop_comm(dev: indigo.Device = None):  # noqa
-        """
-        Standard Indigo method when device comm is disabled
+    def device_stop_comm(dev: Optional[indigo.Device] = None) -> None:  # noqa
+        """Standard Indigo method when device comm is disabled.
 
-        :param indigo.Device dev:
-        :return:
+        Args:
+            dev (indigo.Device): The Indigo device instance.
         """
         dev.updateStateOnServer('onOffState', value=False, uiValue="Disabled")
         dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 
     # =============================================================================
-    def get_prefs_config_ui_values(self):  # noqa
-        """
-        Standard Indigo method for when plugin preferences dialog is opened
+    def get_prefs_config_ui_values(self) -> indigo.Dict:  # noqa
+        """Standard Indigo method for when plugin preferences dialog is opened.
+
+        Returns:
+            indigo.Dict: The plugin preferences dict with defaults applied.
         """
         plugin_prefs = self.pluginPrefs
 
@@ -176,10 +170,8 @@ class Plugin(indigo.PluginBase):
         return plugin_prefs
 
     # =============================================================================
-    def run_concurrent_thread(self):  # noqa
-        """
-        Standard Indigo method that runs continuously (if present)
-        """
+    def run_concurrent_thread(self) -> None:  # noqa
+        """Standard Indigo method that runs continuously (if present)."""
         self.sleep(2)
 
         try:
@@ -195,62 +187,57 @@ class Plugin(indigo.PluginBase):
 
     # =============================================================================
     @staticmethod
-    def sendDevicePing(dev_id: int = 0, suppress_logging: bool = False):  # noqa
-        """
-        Standard Indigo method for when plugin device receives a ping request
+    def sendDevicePing(dev_id: int = 0, suppress_logging: bool = False) -> dict:  # noqa
+        """Standard Indigo method for when plugin device receives a ping request.
 
-        :param int dev_id:
-        :param bool suppress_logging:
-        :return:
+        Args:
+            dev_id (int): The Indigo device ID to ping.
+            suppress_logging (bool): If True, suppresses logging of the ping.
+
+        Returns:
+            dict: A result dict indicating failure.
         """
         indigo.server.log("BikeShare Plugin devices do not support the ping function.")
         return {'result': 'Failure'}
 
     # =============================================================================
-    def shutdown(self):
-        """
-        Standard Indigo method for when the plugin is shut down
-        """
+    def shutdown(self) -> None:
+        """Standard Indigo method for when the plugin is shut down."""
         self.plugin_is_shutting_down = True
 
     # =============================================================================
-    def startup(self):
-        """
-        Standard Indigo method for when the plugin is started
-        """
+    def startup(self) -> None:
+        """Standard Indigo method for when the plugin is started."""
         # =========================== Audit Indigo Version ============================
         self.fogbert.audit_server_version(min_ver=2022)
 
     # =============================================================================
-    def trigger_start_processing(self, trigger: indigo.Trigger):  # noqa
-        """
-        Standard Indigo Method for trigger enabled
+    def trigger_start_processing(self, trigger: indigo.Trigger) -> None:  # noqa
+        """Standard Indigo method called when a trigger is enabled.
 
-        :param indigo.Trigger trigger:
-        :return:
+        Args:
+            trigger (indigo.Trigger): The Indigo trigger instance.
         """
         self.master_trigger_dict[trigger.pluginProps['listOfStations']] = trigger.id
 
     # =============================================================================
-    def trigger_stop_processing(self, trigger = indigo.Trigger):  # noqa
-        """
-        Standard Indigo Method for trigger disabled
+    def trigger_stop_processing(self, trigger: indigo.Trigger) -> None:  # noqa
+        """Standard Indigo method called when a trigger is disabled.
 
-        :param indigo.Trigger trigger:
-        :return:
+        Args:
+            trigger (indigo.Trigger): The Indigo trigger instance.
         """
 
     # =============================================================================
     # ============================ BikeShare Methods ==============================
     # =============================================================================
-    def business_hours(self):
-        """
-        Test to see if current time is within plugin operation hours
+    def business_hours(self) -> bool:
+        """Test to see if current time is within plugin operation hours.
 
-        The business_hours() method tests to see if the current time is within the operation hours set within the
-        plugin configuration dialog.  It returns True if it is within business hours, otherwise returns False.
-        ---
-        :return bool:
+        Tests whether the current time falls within the operation hours set in the plugin configuration dialog.
+
+        Returns:
+            bool: True if within business hours, False otherwise.
         """
         now = dt.datetime.now()
         start_updating = self.pluginPrefs.get('start_time', "00:00")
@@ -273,9 +260,8 @@ class Plugin(indigo.PluginBase):
         return value
 
     # =============================================================================
-    def commsKillAll(self):  # noqa
-        """
-        The commsKillAll() method has been deprecated.
+    def commsKillAll(self) -> None:  # noqa
+        """Deprecated. Use comms_kill_all() instead.
 
         Supports legacy installations.
         """
@@ -283,19 +269,17 @@ class Plugin(indigo.PluginBase):
 
     # =============================================================================
     @staticmethod
-    def comms_kill_all():
-        """
-        Disable all plugin devices in Indigo
+    def comms_kill_all() -> None:
+        """Disable all plugin devices in Indigo.
 
-        comms_kill_all() sets the enabled status of all plugin devices to false.
+        Sets the enabled status of all plugin devices to false.
         """
         for dev in indigo.devices.iter(filter="self"):
             indigo.device.enable(dev, value=False)
 
     # =============================================================================
-    def commsUnkillAll(self):  # noqa
-        """
-        The commsUnkillAll() method has been deprecated.
+    def commsUnkillAll(self) -> None:  # noqa
+        """Deprecated. Use comms_unkill_all() instead.
 
         Supports legacy installations.
         """
@@ -303,20 +287,17 @@ class Plugin(indigo.PluginBase):
 
     # =============================================================================
     @staticmethod
-    def comms_unkill_all():
-        """
-        Enable all plugin devices in Indigo
+    def comms_unkill_all() -> None:
+        """Enable all plugin devices in Indigo.
 
-        comms_unkill_all() sets the enabled status of all plugin devices to true.
+        Sets the enabled status of all plugin devices to true.
         """
         for dev in indigo.devices.iter(filter="self"):
             indigo.device.enable(dev, value=True)
 
     # =============================================================================
-    def dump_bike_data(self):
-        """
-        Title Placeholder
-        """
+    def dump_bike_data(self) -> None:
+        """Dump current bike data to a log file."""
         debug_level = int(self.pluginPrefs.get('showDebugLevel', "30"))
         time_stamp  = dt.datetime.now().strftime("%Y-%m-%d %H.%M")
         log_path    = indigo.server.getLogsFolderPath()
@@ -333,28 +314,28 @@ class Plugin(indigo.PluginBase):
 
     # =============================================================================
     @staticmethod
-    def generator_time(filter: str = "", values_dict: indigo.Dict = None, type_id: str = "", target_id: int = 0):  # noqa
-        """
-        List of hours generator
+    def generator_time(filter: str = "", values_dict: Optional[indigo.Dict] = None, type_id: str = "", target_id: int = 0) -> list[tuple[str, str]]:  # noqa
+        """Generate a list of hours for use in time selection menus.
 
-        Creates a list of times for use in setting the desired time for weather forecast emails to be sent.
+        Args:
+            filter (str): Indigo filter string (unused).
+            values_dict (indigo.Dict): The current values dict (unused).
+            type_id (str): The type ID (unused).
+            target_id (int): The target ID (unused).
 
-        :param str filter:
-        :param indigo.Dict values_dict:
-        :param str type_id:
-        :param int target_id:
-        :return list:
+        Returns:
+            list: A list of (value, label) tuples for each hour from 00:00 to 24:00.
         """
         return [(f"{hour:02.0f}:00", f"{hour:02.0f}:00") for hour in range(0, 25)]
 
     # =============================================================================
-    def get_bike_data(self):
-        """
-        Download the necessary JSON data from the bike sharing service
+    def get_bike_data(self) -> Optional[dict]:
+        """Download the necessary JSON data from the bike sharing service.
 
-        The get_bike_data action reaches out to the bike share server and downloads the JSON needed data.
+        Reaches out to the bike share server and downloads the JSON data.
 
-        :return dict self.system_data:
+        Returns:
+            dict: The system data dict, or None on error.
         """
         self.system_data = {}
 
@@ -393,15 +374,17 @@ class Plugin(indigo.PluginBase):
             return None
 
     # =============================================================================
-    def get_system_list(self, filter: str = "", type_id: int = 0, values_dict: indigo.Dict = None, target_id: int = 0) -> list:  # noqa
-        """
-        Title Placeholder
+    def get_system_list(self, filter: str = "", type_id: int = 0, values_dict: Optional[indigo.Dict] = None, target_id: int = 0) -> list[tuple[str, str]]:  # noqa
+        """Generate a sorted list of available bike sharing systems.
 
-        :param str filter:
-        :param int type_id:
-        :param indigo.Dict values_dict:
-        :param int target_id:
-        :return:
+        Args:
+            filter (str): Indigo filter string (unused).
+            type_id (int): The type ID (unused).
+            values_dict (indigo.Dict): The current values dict (unused).
+            target_id (int): The target ID (unused).
+
+        Returns:
+            list: A sorted list of (url, name) tuples for each available system.
         """
         try:
             # with httpx.get("https://raw.githubusercontent.com/NABSA/gbfs/master/systems.csv", timeout=10) as response:
@@ -440,32 +423,30 @@ class Plugin(indigo.PluginBase):
             self.logger.debug("HTTPX HTTPStatusError: ", exc_info=True)
 
     # =============================================================================
-    def get_station_list(self, filter: str = "", type_id: int = 0, values_dict: indigo.Dict = None, target_id: int = 0):  # noqa
-        """
-        Create a list of bike sharing stations for dropdown menus
+    def get_station_list(self, filter: str = "", type_id: int = 0, values_dict: Optional[indigo.Dict] = None, target_id: int = 0) -> list[tuple[str, str]]:  # noqa
+        """Create a sorted list of bike sharing stations for dropdown menus.
 
-        The get_station_list() method generates a sorted list of station names for use in device config dialogs.
+        Args:
+            filter (str): Indigo filter string (unused).
+            type_id (int): The type ID (unused).
+            values_dict (indigo.Dict): The current values dict (unused).
+            target_id (int): The target ID (unused).
 
-        :param str filter:
-        :param str type_id:
-        :param int target_id:
-        :param indigo.Dict values_dict:
-        :return list:
+        Returns:
+            list: A sorted list of (station_id, name) tuples.
         """
         station_information = self.system_data['station_information']['data']['stations']
         return sorted([(key['station_id'], key['name']) for key in station_information], key=lambda x: x[-1])
 
     # =============================================================================
-    def parse_bike_data(self, dev: indigo.Device = None):
-        """
-        Parse bike data for saving to custom device states
+    def parse_bike_data(self, dev: Optional[indigo.Device] = None) -> None:
+        """Parse bike data and save values to custom device states.
 
-        The parse_bike_data() method takes the JSON data (contained within 'self.system_data' variable) and assigns
-        values to relevant device states. In instances where the service provides a null string value, the plugin
-        assigns the value of "Not provided." to alert the user to that fact.
+        Takes the JSON data from self.system_data and assigns values to relevant device states. When the service
+        provides a null string value, assigns "Unknown" to alert the user.
 
-        :param indigo.Device dev:
-        :return:
+        Args:
+            dev (indigo.Device): The Indigo device instance to update.
         """
         states_list = []
         station_id  = dev.pluginProps['stationName']
@@ -523,14 +504,11 @@ class Plugin(indigo.PluginBase):
         dev.updateStatesOnServer(states_list)
 
     # =============================================================================
-    def process_triggers(self):
-        """
-        Process plugin triggers
+    def process_triggers(self) -> None:
+        """Process plugin triggers.
 
-        The process_triggers method will examine the statusValue state of each device, determine whether there is a
-        trigger for any stations reported as not in service, and fire the corresponding trigger.
-
-        :return:
+        Examines the statusValue state of each device, determines whether there is a trigger for any stations
+        reported as not in service, and fires the corresponding trigger.
         """
         try:
             for dev in indigo.devices.iter(filter='self'):
@@ -551,38 +529,35 @@ class Plugin(indigo.PluginBase):
             pass
 
     # =============================================================================
-    def refreshBikeAction(self, values_dict: indigo.Device = None):  # noqa
-        """
-        The refreshBikeAction() method has been deprecated.
+    def refreshBikeAction(self, values_dict: Optional[indigo.Dict] = None) -> None:  # noqa
+        """Deprecated. Use refresh_bike_action() instead.
 
         Supports legacy installations.
 
-        :param indigo.Dict values_dict:
-        :return:
+        Args:
+            values_dict (indigo.Dict): The action values dict.
         """
         self.refresh_bike_action(values_dict=values_dict)
 
     # =============================================================================
-    def refresh_bike_action(self, values_dict: indigo.Dict = None):  # noqa
-        """
-        Refresh bike data based on call from Indigo Action item
+    def refresh_bike_action(self, values_dict: Optional[indigo.Dict] = None) -> None:  # noqa
+        """Refresh bike data based on a call from an Indigo Action item.
 
-        The refresh_bike_action method is used to trigger a data refresh cycle (get it?) when requested by the user
-        through an Indigo action.
-
-        :param indigo.Dict values_dict:
-        :return:
+        Args:
+            values_dict (indigo.Dict): The action values dict.
         """
         self.refresh_bike_data()
 
     # =============================================================================
-    def refresh_bike_data(self, device=None, force: bool = False) -> None:
-        """
-        Refresh bike data based on a call from Indigo Plugin menu
+    def refresh_bike_data(self, device: Optional[indigo.Device] = None, force: bool = False) -> None:
+        """Refresh bike data based on a call from the Indigo Plugin menu.
 
-        This method refreshes bike data for all devices based on a plugin menu call. Note that this method does not
-        honor the "business hours" limitation, as it is assumed that--since the user has requested an update--they are
-        interested in getting one regardless of the time of day.
+        Refreshes bike data for all devices. Does not honor the "business hours" limitation, as it is assumed the
+        user wants an update regardless of time of day.
+
+        Args:
+            device (indigo.Device, optional): A specific device to refresh. If None, all devices are refreshed.
+            force (bool): If True, forces a refresh even if the interval has not elapsed.
         """
 
         try:
@@ -662,11 +637,12 @@ class Plugin(indigo.PluginBase):
             self.logger.exception("There was a problem refreshing the data. Will try on next cycle.")
 
     def my_tests(self, action: indigo.PluginAction = None) -> None:  # noqa
-        """
-        The main unit test method
+        """Run all plugin unit tests.
 
-        The my_tests method is called from a plugin action item and, when called, imports all unit tests and runs them.
-        If the unit test module returns True, then all tests have passed.
+        Called from a plugin action item. Imports and runs all unit tests, logging a warning for each passing suite.
+
+        Args:
+            action (indigo.PluginAction): The Indigo action instance (unused).
         """
         from Tests import test_plugin  # test_devices
         tests = test_plugin.TestPlugin()
