@@ -635,24 +635,3 @@ class Plugin(indigo.PluginBase):
 
         except Exception:  # noqa
             self.logger.exception("There was a problem refreshing the data. Will try on next cycle.")
-
-    def my_tests(self, action: indigo.PluginAction = None) -> None:  # noqa
-        """Run all plugin unit tests.
-
-        Called from a plugin action item. Imports and runs all unit tests, logging a warning for each passing suite.
-
-        Args:
-            action (indigo.PluginAction): The Indigo action instance (unused).
-        """
-        from Tests import test_plugin  # test_devices
-        tests = test_plugin.TestPlugin()
-        if tests.test_plugin_action(self):
-            self.logger.warning("Plugin action tests passed.")
-        if tests.test_plugin_trigger(self):
-            self.logger.warning("Plugin trigger tests passed.")
-        if tests.test_get_system_list(self):
-            self.logger.warning("Get system list tests passed.")
-        if tests.test_get_station_list(self):
-            self.logger.warning("Get station list tests passed.")
-        if tests.test_get_bike_data(self):
-            self.logger.warning("Get bike data tests passed.")
