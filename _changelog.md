@@ -1,3 +1,8 @@
+### v2025.2.0
+- Removes `my_tests` action and method.
+- Adds trigger tests.
+- Code cleanup.
+
 ### v2025.1.0
 - Fixes bug where `dataAge` and `last_reported` returned "Unknown".
 - Transitions from `requests` to `httpx`.
