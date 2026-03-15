@@ -2,6 +2,9 @@
 - Removes `my_tests` action and method.
 - Adds trigger tests.
 - Code cleanup.
+- Standardized project `.gitignore` file.
+- Removes unused variables from `tests/.env` file.
+- Removes empty plugin directories.
 
 ### v2025.1.0
 - Fixes bug where `dataAge` and `last_reported` returned "Unknown".
