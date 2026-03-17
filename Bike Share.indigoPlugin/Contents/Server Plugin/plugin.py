@@ -81,7 +81,7 @@ class Plugin(indigo.PluginBase):
         self.plugin_is_initializing = False
 
     # =============================================================================
-    def log_plugin_environment(self) -> None:
+    def log_plugin_environment(self, action: indigo.actionGroup = None) -> None:
         """Log pluginEnvironment information when plugin is first started."""
         self.fogbert.pluginEnvironment()
 
@@ -260,7 +260,7 @@ class Plugin(indigo.PluginBase):
         return value
 
     # =============================================================================
-    def commsKillAll(self) -> None:  # noqa
+    def commsKillAll(self, action: indigo.actionGroup=None) -> None:  # noqa
         """Deprecated. Use comms_kill_all() instead.
 
         Supports legacy installations.
@@ -268,8 +268,7 @@ class Plugin(indigo.PluginBase):
         self.comms_kill_all()
 
     # =============================================================================
-    @staticmethod
-    def comms_kill_all() -> None:
+    def comms_kill_all(self, action: indigo.actionGroup = None) -> None:  # noqa
         """Disable all plugin devices in Indigo.
 
         Sets the enabled status of all plugin devices to false.
@@ -286,8 +285,7 @@ class Plugin(indigo.PluginBase):
         self.comms_unkill_all()
 
     # =============================================================================
-    @staticmethod
-    def comms_unkill_all() -> None:
+    def comms_unkill_all(self, action: indigo.actionGroup = None) -> None:  # noqa
         """Enable all plugin devices in Indigo.
 
         Sets the enabled status of all plugin devices to true.
@@ -296,7 +294,7 @@ class Plugin(indigo.PluginBase):
             indigo.device.enable(dev, value=True)
 
     # =============================================================================
-    def dump_bike_data(self) -> None:
+    def dump_bike_data(self, action: indigo.actionGroup = None) -> None:
         """Dump current bike data to a log file."""
         debug_level = int(self.pluginPrefs.get('showDebugLevel', "30"))
         time_stamp  = dt.datetime.now().strftime("%Y-%m-%d %H.%M")
