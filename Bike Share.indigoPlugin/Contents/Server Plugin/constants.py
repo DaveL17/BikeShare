@@ -17,3 +17,7 @@ DEBUG_LABELS = {
     40: "Error Messages",
     50: "Critical Errors Only"
 }
+
+GBFS_SYSTEMS_CSV_URL = "https://raw.githubusercontent.com/NABSA/gbfs/master/systems.csv"
+HTTP_TIMEOUT        = 10
+TIMESTAMP_FORMAT    = "%Y-%m-%d %H:%M:%S"

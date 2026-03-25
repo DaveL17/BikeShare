@@ -26,7 +26,7 @@ import indigo  # noqa
 
 # My modules
 import DLFramework.DLFramework as Dave
-from constants import DEBUG_LABELS               # noqa
+from constants import DEBUG_LABELS, GBFS_SYSTEMS_CSV_URL, HTTP_TIMEOUT, TIMESTAMP_FORMAT  # noqa
 from plugin_defaults import kDefaultPluginPrefs  # noqa
 
 # =================================== HEADER ==================================
@@ -55,7 +55,6 @@ class Plugin(indigo.PluginBase):
 
         # ============================ Instance Attributes =============================
         self.open_for_business       = None
-        self.debug_level             = int(self.pluginPrefs.get('showDebugLevel', 30))
         self.download_interval       = int(self.pluginPrefs.get('downloadInterval', 900))
         self.master_trigger_dict     = {}
         self.plugin_is_initializing  = True
@@ -350,25 +349,15 @@ class Plugin(indigo.PluginBase):
 
             # Go and get the data from the bike sharing service.
             self.logger.debug("Auto-discovery URL: %s" % auto_discovery_url)
-            reply = httpx.get(auto_discovery_url, timeout=10)
+            reply = httpx.get(auto_discovery_url, timeout=HTTP_TIMEOUT)
             for feed in reply.json()['data'][lang]['feeds']:
-                self.system_data[feed['name']] = httpx.get(feed['url'], timeout=10).json()
+                self.system_data[feed['name']] = httpx.get(feed['url'], timeout=HTTP_TIMEOUT).json()
             return self.system_data
 
         # ======================== Communication Error Handling ========================
-        except httpx.HTTPStatusError:
-            self.logger.exception("Status Error. Will try again later.")
-            self.logger.debug("HTTPX HTTPStatusError: ", exc_info=True)
-            return None
-
-        except httpx.RequestError:
-            self.logger.exception("Request Error. Will try again later.")
-            self.logger.debug("HTTPX RequestError: ", exc_info=True)
-            return None
-
-        except Exception:  # noqa
-            self.logger.exception("General exception.")
-            self.logger.debug("General Error: ", exc_info=True)
+        except (httpx.HTTPStatusError, httpx.RequestError, Exception):  # noqa
+            self.logger.exception("Communication error. Will try again later.")
+            self.logger.debug("HTTP error: ", exc_info=True)
             return None
 
     # =============================================================================
@@ -385,12 +374,8 @@ class Plugin(indigo.PluginBase):
             list: A sorted list of (url, name) tuples for each available system.
         """
         try:
-            # with httpx.get("https://raw.githubusercontent.com/NABSA/gbfs/master/systems.csv", timeout=10) as response:
-            #     csv_dict = csv.DictReader(response.content.decode('utf-8').splitlines())
-
-            # DaveL17 2025-06-010 Replace the requests quote wrapper. httpx doesn't support the `with` statement.
-            response = httpx.get("https://raw.githubusercontent.com/NABSA/gbfs/master/systems.csv", timeout=10)
-            response.raise_for_status()  # Raises an exception for bad status codes
+            response = httpx.get(GBFS_SYSTEMS_CSV_URL, timeout=HTTP_TIMEOUT)
+            response.raise_for_status()
             csv_dict = csv.DictReader(response.content.decode("utf-8").splitlines())
 
             # convert the DictReader object to a list because DictReader objects are not subscriptable.
@@ -404,21 +389,14 @@ class Plugin(indigo.PluginBase):
 
             # convert iterator into list and collapse any spaces in the URL field.
             list_li = [(_["Auto-Discovery URL"].replace(" ", ""), _["Combined Name"]) for _ in new_dict]
-
-            # Percent-encode as much as possible.
-            # DaveL17 2025-06-010 Replace the requests quote wrapper.
-            # list_li = [(requests.utils.quote(k, safe="%:/"), v) for (k, v) in list_li]
             list_li = [(quote(k, safe="%:/"), v) for (k, v) in list_li]
 
-            # Log the number of available systems.
-            num_systems = len(list_li)
-
-            self.logger.debug("%s bike sharing systems available." % num_systems)
+            self.logger.debug("%s bike sharing systems available." % len(list_li))
             return sorted(list_li, key=lambda tup: tup[1].lower())
 
-        except httpx.HTTPStatusError:
-            self.logger.exception("Status Error. Will try again later.")
-            self.logger.debug("HTTPX HTTPStatusError: ", exc_info=True)
+        except (httpx.HTTPStatusError, httpx.RequestError, Exception):  # noqa
+            self.logger.exception("Communication error. Will try again later.")
+            self.logger.debug("HTTP error: ", exc_info=True)
 
     # =============================================================================
     def get_station_list(self, filter: str = "", type_id: int = 0, values_dict: Optional[indigo.Dict] = None, target_id: int = 0) -> list[tuple[str, str]]:  # noqa
@@ -458,6 +436,10 @@ class Plugin(indigo.PluginBase):
         # Station Status
         for station in self.system_data['station_status']['data']['stations']:
             if station['station_id'] == station_id:
+                # Coerce select entries to bool
+                for _ in ('is_renting', 'is_returning'):
+                    station[_] = station[_] == 1
+
                 for key in (
                     'is_renting',
                     'is_returning',
@@ -467,21 +449,12 @@ class Plugin(indigo.PluginBase):
                     'num_docks_disabled',
                     'num_ebikes_available',
                 ):
-
-                    # Coerce select entries to bool
-                    for _ in ('is_renting', 'is_returning'):
-                        if station[_] == 1:
-                            station[_] = True
-                        else:
-                            station[_] = False
-
                     states_list.append({'key': key, 'value': station.get(key, 'Unknown')})
 
                 # ================================== Data Age ==================================
                 try:
                     last_report = int(station['last_reported'])
-                    fmt = "%Y-%m-%d %H:%M:%S"
-                    last_report_human = dt.datetime.fromtimestamp(last_report).strftime(fmt)
+                    last_report_human = dt.datetime.fromtimestamp(last_report).strftime(TIMESTAMP_FORMAT)
 
                     diff_time = dt.datetime.now() - dt.datetime.fromtimestamp(last_report)
 
