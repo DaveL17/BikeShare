@@ -1,3 +1,12 @@
+### v2025.2.1
+- Fixes bug where `stop_time` used `start_time` minutes when computing business hours end time.
+- Fixes inverted refresh logic that prevented device updates from running.
+- Fixes stale bike/dock counts displayed after a data refresh.
+- Fixes `return` in device loop that caused remaining devices to be skipped.
+- Fixes `logger.exception()` calls missing required message argument.
+- Fixes unguarded `KeyError` in `get_station_list()` when system data is unavailable.
+- Fixes malformed log message missing closing parenthesis in `closed_prefs_config_ui()`.
+
 ### v2025.2.0
 - Removes `my_tests` action and method.
 - Adds trigger tests.

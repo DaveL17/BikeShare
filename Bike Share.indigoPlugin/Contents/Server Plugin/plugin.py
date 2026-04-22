@@ -35,7 +35,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'BikeShare Plugin for Indigo'
-__version__   = '2025.2.0'
+__version__   = '2025.2.1'
 
 
 # =============================================================================
@@ -110,7 +110,7 @@ class Plugin(indigo.PluginBase):
             # Debug Logging
             self.debug_level = int(values_dict['showDebugLevel'])
             self.indigo_log_handler.setLevel(self.debug_level)
-            indigo.server.log(f"Debugging on (Level: {DEBUG_LABELS[self.debug_level]} ({self.debug_level})")
+            indigo.server.log(f"Debugging on (Level: {DEBUG_LABELS[self.debug_level]} ({self.debug_level}))")
 
             # Plugin-specific actions
             self.download_interval = int(values_dict.get('downloadInterval', 15))
@@ -244,7 +244,7 @@ class Plugin(indigo.PluginBase):
         stop_updating  = self.pluginPrefs.get('stop_time', "23:59")
         if stop_updating == "24:00":
             stop_updating = "23:59"
-        stop_time      = now.replace(hour=int(stop_updating[0:2]), minute=int(start_updating[3:5]))
+        stop_time      = now.replace(hour=int(stop_updating[0:2]), minute=int(stop_updating[3:5]))
 
         # Otherwise, let's check to see if we're open for business.
         if start_time < now < stop_time:
@@ -411,8 +411,12 @@ class Plugin(indigo.PluginBase):
         Returns:
             list: A sorted list of (station_id, name) tuples.
         """
-        station_information = self.system_data['station_information']['data']['stations']
-        return sorted([(key['station_id'], key['name']) for key in station_information], key=lambda x: x[-1])
+        try:
+            station_information = self.system_data['station_information']['data']['stations']
+            return sorted([(key['station_id'], key['name']) for key in station_information], key=lambda x: x[-1])
+        except KeyError:
+            self.logger.warning("Station data unavailable.")
+            return []
 
     # =============================================================================
     def parse_bike_data(self, dev: Optional[indigo.Device] = None) -> None:
@@ -468,7 +472,7 @@ class Plugin(indigo.PluginBase):
                     states_list.append({'key': 'dataAge', 'value': diff_time_str})
 
                 except Exception:  # noqa
-                    self.logger.exception()
+                    self.logger.exception("Error parsing last_reported timestamp.")
                     states_list.append({'key': 'last_reported', 'value': "Unknown", 'uiValue': "Unknown"})
                     states_list.append({'key': 'dataAge', 'value': "Unknown", 'uiValue': "Unknown"})
 
@@ -548,9 +552,9 @@ class Plugin(indigo.PluginBase):
                 time_to_refresh = date_diff > (int(self.pluginPrefs['downloadInterval'] - 5))
 
                 # It's not time to refresh devices yet. If force is True, we go ahead and update the device anyway.
-                if not force or time_to_refresh:
+                if not force and not time_to_refresh:
                     self.logger.debug("Not time to refresh devices.")
-                    return
+                    continue
 
                 dev.updateStateOnServer('onOffState', value=True, uiValue="Refreshing")
                 dev.stateListOrDisplayStateIdChanged()
@@ -561,11 +565,11 @@ class Plugin(indigo.PluginBase):
 
                 elif dev.enabled:
                     try:
-                        num_bikes = dev.states['num_bikes_available']
-                        num_docks = dev.states['num_docks_available']
-
                         if self.system_data:
                             self.parse_bike_data(dev)
+
+                            num_bikes = dev.states['num_bikes_available']
+                            num_docks = dev.states['num_docks_available']
 
                             if dev.states['is_renting'] == 1:
                                 if self.pluginPrefs.get('ui_state', 'num_bikes') == 'num_bikes':
@@ -591,7 +595,7 @@ class Plugin(indigo.PluginBase):
                             },
                         )
                         dev.setErrorStateOnServer("Error")
-                        self.logger.exception()
+                        self.logger.exception("Error refreshing device data.")
                         self.logger.debug("Sleeping until next scheduled poll.")
                         dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 
