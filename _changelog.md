@@ -1,3 +1,18 @@
+### v2025.2.2
+- Fixes redundant `parse_bike_data()` call in `device_start_comm()` that caused double-parsing on device start.
+- Fixes `states_list` accumulation across devices in `refresh_bike_data()` that caused prior device states to bleed 
+  into subsequent device updates.
+- Fixes unconfigured device handler in `refresh_bike_data()` that blocked the entire plugin thread for 60 seconds; now 
+  uses `continue` instead.
+- Fixes `is_renting` comparison in `refresh_bike_data()` that used `== 1` after `parse_bike_data()` had already coerced 
+  the value to `bool`.
+- Fixes `process_triggers()` reading `stationName` from device states instead of plugin props, causing all trigger 
+  processing to silently fail.
+- Fixes `get_system_list()` exception handler missing `return []`, causing a `TypeError` when Indigo tried to populate 
+  the system dropdown after a network error.
+- Fixes `business_hours()` closing one minute early when stop time is "24:00"; now uses `second=59` and `<=` comparison 
+  to correctly include the final minute.
+
 ### v2025.2.1
 - Fixes bug where `stop_time` used `start_time` minutes when computing business hours end time.
 - Fixes inverted refresh logic that prevented device updates from running.
@@ -36,7 +51,7 @@
 - Code cleanup.
 
 ### v2022.0.2
-- Adds `_to_do_list.md` and changes changelog to markdown.
+- Adds `_to_do_list.md` and changes changelog to Markdown.
 - Moves plugin environment logging to plugin menu item (log only on request).
 
 ### v2022.0.1

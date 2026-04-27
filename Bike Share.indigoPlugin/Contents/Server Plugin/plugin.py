@@ -35,7 +35,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'BikeShare Plugin for Indigo'
-__version__   = '2025.2.1'
+__version__   = '2025.2.2'
 
 
 # =============================================================================
@@ -134,7 +134,6 @@ class Plugin(indigo.PluginBase):
         # We send a copy of the device to the refresh_bike_data method here so that the plugin doesn't do a global
         # update of all devices for each device started.
         self.refresh_bike_data(device=dev, force=True)
-        self.parse_bike_data(dev=dev)
 
     # =============================================================================
     @staticmethod
@@ -243,11 +242,12 @@ class Plugin(indigo.PluginBase):
         start_time     = now.replace(hour=int(start_updating[0:2]), minute=int(start_updating[3:5]))
         stop_updating  = self.pluginPrefs.get('stop_time', "23:59")
         if stop_updating == "24:00":
-            stop_updating = "23:59"
-        stop_time      = now.replace(hour=int(stop_updating[0:2]), minute=int(stop_updating[3:5]))
+            stop_time = now.replace(hour=23, minute=59, second=59)
+        else:
+            stop_time = now.replace(hour=int(stop_updating[0:2]), minute=int(stop_updating[3:5]))
 
         # Otherwise, let's check to see if we're open for business.
-        if start_time < now < stop_time:
+        if start_time <= now <= stop_time:
             value = True
         else:
             self.logger.info("Closed for business.")
@@ -397,6 +397,7 @@ class Plugin(indigo.PluginBase):
         except (httpx.HTTPStatusError, httpx.RequestError, Exception):  # noqa
             self.logger.exception("Communication error. Will try again later.")
             self.logger.debug("HTTP error: ", exc_info=True)
+            return []
 
     # =============================================================================
     def get_station_list(self, filter: str = "", type_id: int = 0, values_dict: Optional[indigo.Dict] = None, target_id: int = 0) -> list[tuple[str, str]]:  # noqa
@@ -488,7 +489,7 @@ class Plugin(indigo.PluginBase):
         try:
             for dev in indigo.devices.iter(filter='self'):
 
-                station_name   = dev.states['stationName']
+                station_name   = dev.pluginProps['stationName']
                 station_status = dev.states['statusValue']
                 if station_name in self.master_trigger_dict:
 
@@ -536,8 +537,6 @@ class Plugin(indigo.PluginBase):
         """
 
         try:
-            states_list = []
-
             self.get_bike_data()
 
             for dev in indigo.devices.iter(filter="self"):
@@ -556,12 +555,13 @@ class Plugin(indigo.PluginBase):
                     self.logger.debug("Not time to refresh devices.")
                     continue
 
+                states_list = []
                 dev.updateStateOnServer('onOffState', value=True, uiValue="Refreshing")
                 dev.stateListOrDisplayStateIdChanged()
 
                 if not dev.configured:
                     indigo.server.log(f"[{dev.name}] Skipping device because it is not fully configured.")
-                    self.sleep(60)
+                    continue
 
                 elif dev.enabled:
                     try:
@@ -571,7 +571,7 @@ class Plugin(indigo.PluginBase):
                             num_bikes = dev.states['num_bikes_available']
                             num_docks = dev.states['num_docks_available']
 
-                            if dev.states['is_renting'] == 1:
+                            if dev.states['is_renting']:
                                 if self.pluginPrefs.get('ui_state', 'num_bikes') == 'num_bikes':
                                     display_val = f"{num_bikes}"
                                 else:
