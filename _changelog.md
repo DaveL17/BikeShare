@@ -1,3 +1,12 @@
+### v2025.2.3
+- Fixes `process_triggers()` accessing undefined `statusValue` state, which caused all trigger firing to silently fail;
+  now checks `is_renting` boolean state.
+- Fixes `TypeError` in `refresh_bike_data()` where `downloadInterval` pref string was subtracted before casting to `int`.
+- Fixes incorrect fallback default of `15` (seconds) for `downloadInterval` in `closed_prefs_config_ui()`; now uses
+  `900` to match the plugin default.
+- Removes redundant duplicate exception logging in `get_bike_data()` and `get_system_list()`.
+- Fixes `businessHours` device state update passing a `bool` as `uiValue`; now passes a string.
+
 ### v2025.2.2
 - Fixes redundant `parse_bike_data()` call in `device_start_comm()` that caused double-parsing on device start.
 - Fixes `states_list` accumulation across devices in `refresh_bike_data()` that caused prior device states to bleed 
@@ -30,7 +39,7 @@
 - Removes unused variables from `tests/.env` file.
 - Removes empty plugin directories.
 
-### v2025.1.0
+### v2025.1.0 [released]
 - Fixes bug where `dataAge` and `last_reported` returned "Unknown".
 - Transitions from `requests` to `httpx`.
 - Stability and performance improvements.

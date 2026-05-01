@@ -35,7 +35,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'BikeShare Plugin for Indigo'
-__version__   = '2025.2.2'
+__version__   = '2025.2.3'
 
 
 # =============================================================================
@@ -113,7 +113,7 @@ class Plugin(indigo.PluginBase):
             indigo.server.log(f"Debugging on (Level: {DEBUG_LABELS[self.debug_level]} ({self.debug_level}))")
 
             # Plugin-specific actions
-            self.download_interval = int(values_dict.get('downloadInterval', 15))
+            self.download_interval = int(values_dict.get('downloadInterval', 900))
             self.logger.debug("Plugin prefs saved.")
 
             self.refresh_bike_data()
@@ -259,7 +259,7 @@ class Plugin(indigo.PluginBase):
         return value
 
     # =============================================================================
-    def commsKillAll(self, action: indigo.actionGroup=None) -> None:  # noqa
+    def commsKillAll(self, action: indigo.actionGroup = None) -> None:  # noqa
         """Deprecated. Use comms_kill_all() instead.
 
         Supports legacy installations.
@@ -357,7 +357,6 @@ class Plugin(indigo.PluginBase):
         # ======================== Communication Error Handling ========================
         except (httpx.HTTPStatusError, httpx.RequestError, Exception):  # noqa
             self.logger.exception("Communication error. Will try again later.")
-            self.logger.debug("HTTP error: ", exc_info=True)
             return None
 
     # =============================================================================
@@ -396,7 +395,6 @@ class Plugin(indigo.PluginBase):
 
         except (httpx.HTTPStatusError, httpx.RequestError, Exception):  # noqa
             self.logger.exception("Communication error. Will try again later.")
-            self.logger.debug("HTTP error: ", exc_info=True)
             return []
 
     # =============================================================================
@@ -483,18 +481,17 @@ class Plugin(indigo.PluginBase):
     def process_triggers(self) -> None:
         """Process plugin triggers.
 
-        Examines the statusValue state of each device, determines whether there is a trigger for any stations
-        reported as not in service, and fires the corresponding trigger.
+        Examines the is_renting state of each device, determines whether there is a trigger for any stations
+        that are not renting, and fires the corresponding trigger.
         """
         try:
             for dev in indigo.devices.iter(filter='self'):
 
                 station_name   = dev.pluginProps['stationName']
-                station_status = dev.states['statusValue']
+                station_status = dev.states['is_renting']
                 if station_name in self.master_trigger_dict:
 
-                    # This relies on all services reporting status value of 'In Service' when things are normal.
-                    if station_status != 'In Service':
+                    if not station_status:
                         trigger_id = self.master_trigger_dict[station_name]
 
                         if indigo.triggers[trigger_id].enabled:
@@ -548,7 +545,7 @@ class Plugin(indigo.PluginBase):
 
                 # determine if a device update is needed
                 date_diff = (dt.datetime.now() - dev.lastChanged).total_seconds()
-                time_to_refresh = date_diff > (int(self.pluginPrefs['downloadInterval'] - 5))
+                time_to_refresh = date_diff > (int(self.pluginPrefs['downloadInterval']) - 5)
 
                 # It's not time to refresh devices yet. If force is True, we go ahead and update the device anyway.
                 if not force and not time_to_refresh:
@@ -602,7 +599,7 @@ class Plugin(indigo.PluginBase):
                     states_list.append({
                         'key': 'businessHours',
                         'value': self.open_for_business,
-                        'uiValue': self.open_for_business
+                        'uiValue': str(self.open_for_business)
                         }
                     )
                     self.logger.info("[%s] Data refreshed." % dev.name)
