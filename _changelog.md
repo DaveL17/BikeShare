@@ -1,3 +1,7 @@
+### v2025.2.5
+- Fixes `closed_prefs_config_ui()` blocking the config dialog on synchronous network calls; now flags a refresh for
+  `run_concurrent_thread()` to run in the background instead.
+
 ### v2025.2.4
 - Fixes `parse_bike_data()` scanning past a matched station instead of stopping; now breaks out of each loop on match.
 - Standardizes `SupportURL` across XML config files; `Events.xml` now points to the wiki.

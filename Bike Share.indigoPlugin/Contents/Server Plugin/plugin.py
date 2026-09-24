@@ -43,7 +43,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'BikeShare Plugin for Indigo'
-__version__   = '2025.2.4'
+__version__   = '2025.2.5'
 
 
 # =============================================================================
@@ -67,6 +67,7 @@ class Plugin(indigo.PluginBase):
         self.master_trigger_dict     = {}
         self.plugin_is_initializing  = True
         self.plugin_is_shutting_down = False
+        self.refresh_requested       = False
         self.system_data             = {}
 
         # =============================== Debug Logging ================================
@@ -124,7 +125,9 @@ class Plugin(indigo.PluginBase):
             self.download_interval = int(values_dict.get('downloadInterval', DEFAULT_DOWNLOAD_INTERVAL))
             self.logger.debug("Plugin prefs saved.")
 
-            self.refresh_bike_data()
+            # Don't fetch fresh data here -- it involves synchronous network calls that would block the dialog
+            # from closing. Instead, flag it for the concurrent thread to pick up and run in the background.
+            self.refresh_requested = True
 
         else:
             self.logger.debug("Plugin prefs cancelled.")
@@ -186,7 +189,19 @@ class Plugin(indigo.PluginBase):
                     self.refresh_bike_data(force=False)
                     self.process_triggers()
                 self.download_interval = int(self.pluginPrefs.get('downloadInterval', DEFAULT_DOWNLOAD_INTERVAL))
-                self.sleep(self.download_interval)
+
+                # Sleep in short increments (instead of one long self.sleep()) so a refresh requested by closing
+                # the plugin config dialog is picked up within a second or two rather than waiting out the full
+                # download interval.
+                slept = 0
+                while slept < self.download_interval and not self.refresh_requested:
+                    self.sleep(1)
+                    slept += 1
+
+                if self.refresh_requested:
+                    self.refresh_requested = False
+                    self.refresh_bike_data(force=True)
+                    self.process_triggers()
 
         except self.StopThread:
             self.logger.debug("Stopping concurrent thread.")

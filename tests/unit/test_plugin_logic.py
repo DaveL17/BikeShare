@@ -60,7 +60,7 @@ def _make_plugin(extra_prefs: Optional[dict] = None) -> "plugin.Plugin":
     return plugin.Plugin(
         plugin_id="com.fogbert.indigoplugin.bikeShare",
         plugin_display_name="Bike Share",
-        plugin_version="2025.2.4",
+        plugin_version="2025.2.5",
         plugin_prefs=prefs,
     )
 
@@ -471,6 +471,68 @@ class TestRefreshBikeDataDeviceIsolation(unittest.TestCase):
         self.assertEqual(dev_good.error_state, None)
         self.assertEqual(dev_good.states.get('num_bikes_available'), 3)
         self.assertEqual(dev_good.states.get('onOffState'), True)
+
+
+# ==================== closed_prefs_config_ui / run_concurrent_thread =================
+class TestClosedPrefsConfigUiIsNonBlocking(unittest.TestCase):
+    """Regression test: closing the plugin config dialog must not block on network I/O.
+
+    closed_prefs_config_ui() should only flag a refresh (self.refresh_requested); the
+    actual refresh -- and its synchronous httpx calls -- must happen on the background
+    thread (run_concurrent_thread()), not inline in the dialog-close callback.
+    """
+
+    def test_sets_refresh_flag_without_calling_refresh_bike_data(self) -> None:
+        p = _make_plugin()
+        p.get_bike_data = MagicMock()
+        p.refresh_bike_data = MagicMock()
+
+        p.closed_prefs_config_ui(
+            values_dict={
+                'showDebugLevel': '30',
+                'downloadInterval': 895,
+                'start_time': "08:00",
+                'stop_time': "18:00",
+            },
+            user_cancelled=False,
+        )
+
+        p.refresh_bike_data.assert_not_called()
+        p.get_bike_data.assert_not_called()
+        self.assertTrue(p.refresh_requested)
+
+    def test_cancelled_dialog_does_not_flag_a_refresh(self) -> None:
+        p = _make_plugin()
+        p.closed_prefs_config_ui(values_dict={}, user_cancelled=True)
+        self.assertFalse(p.refresh_requested)
+
+
+class TestRunConcurrentThreadPicksUpRefreshRequest(unittest.TestCase):
+    """Regression test: a flagged refresh is picked up promptly by the background thread."""
+
+    def test_refresh_requested_flag_triggers_immediate_refresh(self) -> None:
+        p = _make_plugin({'downloadInterval': 895})
+        p.get_bike_data = MagicMock()  # stands in for the network call refresh_bike_data() would trigger
+        p.business_hours = MagicMock(return_value=False)  # isolate the flag-driven refresh path
+        p.process_triggers = MagicMock()
+        p.refresh_requested = True
+
+        call_count = {'n': 0}
+
+        def fake_sleep(seconds):  # noqa
+            # First call is the method's fixed 2-second startup delay; the flagged refresh is
+            # handled with zero further sleeps (see run_concurrent_thread's chunked-sleep loop),
+            # so a second sleep() call only happens once the loop has moved on -- stop it there.
+            call_count['n'] += 1
+            if call_count['n'] >= 2:
+                raise p.StopThread()
+
+        p.sleep = fake_sleep
+
+        p.run_concurrent_thread()
+
+        p.get_bike_data.assert_called_once()
+        self.assertFalse(p.refresh_requested)
 
 
 if __name__ == "__main__":
