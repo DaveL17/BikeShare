@@ -1,4 +1,4 @@
-### v2025.2.5
+### v2025.2.5 [released]
 - Fixes `closed_prefs_config_ui()` blocking the config dialog on synchronous network calls; now flags a refresh for
   `run_concurrent_thread()` to run in the background instead.
 
