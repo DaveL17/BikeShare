@@ -14,6 +14,31 @@
 - Switches remaining eager `%`-formatted log calls to lazy `%s` formatting in
   `dump_bike_data()`, `get_bike_data()`, `get_system_list()`, and `refresh_bike_data()`,
   per the project's logging style guide.
+- Fixes `business_hours()` to support an overnight window (start time later than stop
+  time, e.g. 22:00 to 06:00); previously such a window was never considered "open."
+- Splits the catch-all exception handling in `get_bike_data()` and `get_system_list()`
+  into a specific `httpx` communication-error branch and a separate, distinctly logged
+  branch for unexpected errors, instead of a single handler that logged everything as
+  "Communication error."
+- Adds `raise_for_status()` to `get_bike_data()`'s auto-discovery and per-feed requests,
+  matching `get_system_list()`, so an HTTP error with a JSON body fails fast as a clear
+  `HTTPStatusError` instead of silently proceeding with the wrong data shape.
+- Fixes `dump_bike_data()` to catch and log a write failure instead of raising
+  unhandled, and to restore the logger's debug level in a `finally` block so a failed
+  write can no longer leave the log level permanently stuck at Informational.
+- Adds `DEFAULT_DOWNLOAD_INTERVAL`, `DEFAULT_START_TIME`, and `DEFAULT_STOP_TIME` to
+  `constants.py` as the single source of truth for these preference defaults, and
+  updates `plugin_defaults.py` and every fallback call site in `plugin.py` to use them
+  instead of retyping literals (which had drifted: `downloadInterval` fallbacks of
+  `900` vs. the real default of `895`, and three different `stop_time` fallbacks of
+  `"23:00"`/`"24:00"`/`"23:59"`). Also adds a missing fallback to the `downloadInterval`
+  read in `refresh_bike_data()`, which previously raised `KeyError` if the pref was
+  ever unset.
+- Fixes `refresh_bike_data()`'s per-device error handler reading
+  `dev.states['num_bikes_available']` directly; a device that fails before that state
+  is ever populated (e.g. a new or misconfigured device) raised a fresh `KeyError` from
+  inside the handler itself, which aborted the refresh for every device remaining in
+  that cycle. Now reads `dev.states.get('num_bikes_available', 'Unknown')`.
 
 ### v2025.2.3 [released]
 - Fixes `process_triggers()` accessing undefined `statusValue` state, which caused all trigger firing to silently fail;

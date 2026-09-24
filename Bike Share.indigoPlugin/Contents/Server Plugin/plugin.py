@@ -26,7 +26,15 @@ import indigo  # noqa
 
 # My modules
 import DLFramework.DLFramework as Dave
-from constants import DEBUG_LABELS, GBFS_SYSTEMS_CSV_URL, HTTP_TIMEOUT, TIMESTAMP_FORMAT  # noqa
+from constants import (  # noqa
+    DEBUG_LABELS,
+    DEFAULT_DOWNLOAD_INTERVAL,
+    DEFAULT_START_TIME,
+    DEFAULT_STOP_TIME,
+    GBFS_SYSTEMS_CSV_URL,
+    HTTP_TIMEOUT,
+    TIMESTAMP_FORMAT,
+)
 from plugin_defaults import kDefaultPluginPrefs  # noqa
 
 # =================================== HEADER ==================================
@@ -55,7 +63,7 @@ class Plugin(indigo.PluginBase):
 
         # ============================ Instance Attributes =============================
         self.open_for_business       = None
-        self.download_interval       = int(self.pluginPrefs.get('downloadInterval', 900))
+        self.download_interval       = int(self.pluginPrefs.get('downloadInterval', DEFAULT_DOWNLOAD_INTERVAL))
         self.master_trigger_dict     = {}
         self.plugin_is_initializing  = True
         self.plugin_is_shutting_down = False
@@ -113,7 +121,7 @@ class Plugin(indigo.PluginBase):
             indigo.server.log(f"Debugging on (Level: {DEBUG_LABELS[self.debug_level]} ({self.debug_level}))")
 
             # Plugin-specific actions
-            self.download_interval = int(values_dict.get('downloadInterval', 900))
+            self.download_interval = int(values_dict.get('downloadInterval', DEFAULT_DOWNLOAD_INTERVAL))
             self.logger.debug("Plugin prefs saved.")
 
             self.refresh_bike_data()
@@ -157,10 +165,10 @@ class Plugin(indigo.PluginBase):
 
         # Default choices for dynamic menus
         if plugin_prefs.get('start_time', "") == "":
-            plugin_prefs['start_time'] = "00:00"
+            plugin_prefs['start_time'] = DEFAULT_START_TIME
 
         if plugin_prefs.get('stop_time', "") == "":
-            plugin_prefs['stop_time'] = "24:00"
+            plugin_prefs['stop_time'] = DEFAULT_STOP_TIME
 
         if int(plugin_prefs.get('showDebugLevel', "30")) < 4:
             plugin_prefs['showDebugLevel'] = '30'
@@ -177,7 +185,7 @@ class Plugin(indigo.PluginBase):
                 if self.business_hours():
                     self.refresh_bike_data(force=False)
                     self.process_triggers()
-                self.download_interval = int(self.pluginPrefs.get('downloadInterval', 900))
+                self.download_interval = int(self.pluginPrefs.get('downloadInterval', DEFAULT_DOWNLOAD_INTERVAL))
                 self.sleep(self.download_interval)
 
         except self.StopThread:
@@ -233,25 +241,30 @@ class Plugin(indigo.PluginBase):
         """Test to see if current time is within plugin operation hours.
 
         Tests whether the current time falls within the operation hours set in the plugin configuration dialog.
+        Supports an overnight window (start time later than stop time, e.g. 22:00 to 06:00).
 
         Returns:
             bool: True if within business hours, False otherwise.
         """
         now = dt.datetime.now()
-        start_updating = self.pluginPrefs.get('start_time', "00:00")
+        start_updating = self.pluginPrefs.get('start_time', DEFAULT_START_TIME)
         start_time     = now.replace(hour=int(start_updating[0:2]), minute=int(start_updating[3:5]))
-        stop_updating  = self.pluginPrefs.get('stop_time', "23:59")
+        stop_updating  = self.pluginPrefs.get('stop_time', DEFAULT_STOP_TIME)
         if stop_updating == "24:00":
             stop_time = now.replace(hour=23, minute=59, second=59)
         else:
             stop_time = now.replace(hour=int(stop_updating[0:2]), minute=int(stop_updating[3:5]))
 
-        # Otherwise, let's check to see if we're open for business.
-        if start_time <= now <= stop_time:
-            value = True
+        # Check to see if we're open for business. A start time after the stop time (e.g. 22:00 to 06:00) denotes an
+        # overnight window that wraps past midnight, so "open" means now is on either side of midnight relative to
+        # the window rather than between the two times on the same day.
+        if start_time <= stop_time:
+            value = start_time <= now <= stop_time
         else:
+            value = now >= start_time or now <= stop_time
+
+        if not value:
             self.logger.info("Closed for business.")
-            value = False
 
         self.open_for_business = value
         for dev in indigo.devices.iter("self"):
@@ -300,14 +313,20 @@ class Plugin(indigo.PluginBase):
         log_path    = indigo.server.getLogsFolderPath()
         file_name   = f"{log_path}/com.fogbert.indigoplugin.bikeShare/{time_stamp} BikeShare data.txt"
 
-        with open(file_name, 'w', encoding="utf-8") as out_file:
-            out_file.write("BikeShare Plugin Data\n")
-            out_file.write(f"{time_stamp}\n")
-            out_file.write(f"{self.system_data}")
-
         self.indigo_log_handler.setLevel(20)
-        self.logger.info("Data written to %s", file_name)
-        self.indigo_log_handler.setLevel(debug_level)
+        try:
+            with open(file_name, 'w', encoding="utf-8") as out_file:
+                out_file.write("BikeShare Plugin Data\n")
+                out_file.write(f"{time_stamp}\n")
+                out_file.write(f"{self.system_data}")
+
+            self.logger.info("Data written to %s", file_name)
+
+        except Exception:  # noqa
+            self.logger.exception("Error writing bike data to %s", file_name)
+
+        finally:
+            self.indigo_log_handler.setLevel(debug_level)
 
     # =============================================================================
     @staticmethod
@@ -350,13 +369,19 @@ class Plugin(indigo.PluginBase):
             # Go and get the data from the bike sharing service.
             self.logger.debug("Auto-discovery URL: %s", auto_discovery_url)
             reply = httpx.get(auto_discovery_url, timeout=HTTP_TIMEOUT)
+            reply.raise_for_status()
             for feed in reply.json()['data'][lang]['feeds']:
-                self.system_data[feed['name']] = httpx.get(feed['url'], timeout=HTTP_TIMEOUT).json()
+                feed_reply = httpx.get(feed['url'], timeout=HTTP_TIMEOUT)
+                feed_reply.raise_for_status()
+                self.system_data[feed['name']] = feed_reply.json()
             return self.system_data
 
         # ======================== Communication Error Handling ========================
-        except (httpx.HTTPStatusError, httpx.RequestError, Exception):  # noqa
+        except (httpx.HTTPStatusError, httpx.RequestError):
             self.logger.exception("Communication error. Will try again later.")
+            return None
+        except Exception:  # noqa
+            self.logger.exception("Unexpected error fetching bike data.")
             return None
 
     # =============================================================================
@@ -393,8 +418,11 @@ class Plugin(indigo.PluginBase):
             self.logger.debug("%s bike sharing systems available.", len(list_li))
             return sorted(list_li, key=lambda tup: tup[1].lower())
 
-        except (httpx.HTTPStatusError, httpx.RequestError, Exception):  # noqa
+        except (httpx.HTTPStatusError, httpx.RequestError):
             self.logger.exception("Communication error. Will try again later.")
+            return []
+        except Exception:  # noqa
+            self.logger.exception("Unexpected error fetching bike sharing systems.")
             return []
 
     # =============================================================================
@@ -548,7 +576,7 @@ class Plugin(indigo.PluginBase):
 
                 # determine if a device update is needed
                 date_diff = (dt.datetime.now() - dev.lastChanged).total_seconds()
-                time_to_refresh = date_diff > (int(self.pluginPrefs['downloadInterval']) - 5)
+                time_to_refresh = date_diff > (int(self.pluginPrefs.get('downloadInterval', DEFAULT_DOWNLOAD_INTERVAL)) - 5)
 
                 # It's not time to refresh devices yet. If force is True, we go ahead and update the device anyway.
                 if not force and not time_to_refresh:
@@ -591,7 +619,7 @@ class Plugin(indigo.PluginBase):
                         states_list.append({
                             'key': 'onOffState',
                             'value': False,
-                            'uiValue': f"{dev.states['num_bikes_available']}"
+                            'uiValue': f"{dev.states.get('num_bikes_available', 'Unknown')}"
                             },
                         )
                         dev.setErrorStateOnServer("Error")
