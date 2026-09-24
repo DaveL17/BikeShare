@@ -35,7 +35,7 @@ __copyright__ = Dave.__copyright__
 __license__   = Dave.__license__
 __build__     = Dave.__build__
 __title__     = 'BikeShare Plugin for Indigo'
-__version__   = '2025.2.3'
+__version__   = '2025.2.4'
 
 
 # =============================================================================
@@ -306,7 +306,7 @@ class Plugin(indigo.PluginBase):
             out_file.write(f"{self.system_data}")
 
         self.indigo_log_handler.setLevel(20)
-        self.logger.info("Data written to %s" % file_name)
+        self.logger.info("Data written to %s", file_name)
         self.indigo_log_handler.setLevel(debug_level)
 
     # =============================================================================
@@ -348,7 +348,7 @@ class Plugin(indigo.PluginBase):
                 self.logger.debug("Waiting for bike system data.")
 
             # Go and get the data from the bike sharing service.
-            self.logger.debug("Auto-discovery URL: %s" % auto_discovery_url)
+            self.logger.debug("Auto-discovery URL: %s", auto_discovery_url)
             reply = httpx.get(auto_discovery_url, timeout=HTTP_TIMEOUT)
             for feed in reply.json()['data'][lang]['feeds']:
                 self.system_data[feed['name']] = httpx.get(feed['url'], timeout=HTTP_TIMEOUT).json()
@@ -390,7 +390,7 @@ class Plugin(indigo.PluginBase):
             list_li = [(_["Auto-Discovery URL"].replace(" ", ""), _["Combined Name"]) for _ in new_dict]
             list_li = [(quote(k, safe="%:/"), v) for (k, v) in list_li]
 
-            self.logger.debug("%s bike sharing systems available." % len(list_li))
+            self.logger.debug("%s bike sharing systems available.", len(list_li))
             return sorted(list_li, key=lambda tup: tup[1].lower())
 
         except (httpx.HTTPStatusError, httpx.RequestError, Exception):  # noqa
@@ -435,6 +435,7 @@ class Plugin(indigo.PluginBase):
             if station['station_id'] == station_id:
                 for key in ('capacity', 'lat', 'lon', 'name',):
                     states_list.append({'key': key, 'value': station.get(key, 'Unknown')})
+                break
 
         # Station Status
         for station in self.system_data['station_status']['data']['stations']:
@@ -474,6 +475,8 @@ class Plugin(indigo.PluginBase):
                     self.logger.exception("Error parsing last_reported timestamp.")
                     states_list.append({'key': 'last_reported', 'value': "Unknown", 'uiValue': "Unknown"})
                     states_list.append({'key': 'dataAge', 'value': "Unknown", 'uiValue': "Unknown"})
+
+                break
 
         dev.updateStatesOnServer(states_list)
 
@@ -602,7 +605,7 @@ class Plugin(indigo.PluginBase):
                         'uiValue': str(self.open_for_business)
                         }
                     )
-                    self.logger.info("[%s] Data refreshed." % dev.name)
+                    self.logger.info("[%s] Data refreshed.", dev.name)
                     dev.updateStatesOnServer(states_list)
 
         except Exception:  # noqa

@@ -1,4 +1,21 @@
-### v2025.2.3
+### v2025.2.4
+- Fixes `parse_bike_data()` scanning the full `station_information` and `station_status`
+  lists after a matching station has already been found; now breaks out of each loop
+  as soon as the match is located.
+- Standardizes `SupportURL` across XML config files; `Events.xml` now points to the
+  GitHub wiki (`.../wiki/triggers`) instead of the separate `davel17.github.io` site,
+  matching `Devices.xml` and `PluginConfig.xml`.
+- Adds `Contents/Packages/` and `*.indigoPlugin.zip` to `.gitignore` so the local
+  `python-dotenv` install (a test-only dependency) and packaged build artifacts can no
+  longer be committed by accident.
+- Corrects `CLAUDE.md`'s repository-structure description: `Bike Share.indigoPlugin/` is
+  a normal subdirectory of the main repo, not a separate Git repository; only
+  `BikeShare.wiki/` is independent.
+- Switches remaining eager `%`-formatted log calls to lazy `%s` formatting in
+  `dump_bike_data()`, `get_bike_data()`, `get_system_list()`, and `refresh_bike_data()`,
+  per the project's logging style guide.
+
+### v2025.2.3 [released]
 - Fixes `process_triggers()` accessing undefined `statusValue` state, which caused all trigger firing to silently fail;
   now checks `is_renting` boolean state.
 - Fixes `TypeError` in `refresh_bike_data()` where `downloadInterval` pref string was subtracted before casting to `int`.
@@ -6,6 +23,7 @@
   `900` to match the plugin default.
 - Removes redundant duplicate exception logging in `get_bike_data()` and `get_system_list()`.
 - Fixes `businessHours` device state update passing a `bool` as `uiValue`; now passes a string.
+- Wiki updates.
 
 ### v2025.2.2
 - Fixes redundant `parse_bike_data()` call in `device_start_comm()` that caused double-parsing on device start.

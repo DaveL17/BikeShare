@@ -4,7 +4,7 @@
         <Name>Station Out of Service</Name>
             <ConfigUI>
 
-                <SupportURL>https://davel17.github.io/BikeShare/</SupportURL>
+                <SupportURL>https://github.com/DaveL17/BikeShare/wiki/triggers</SupportURL>
 
                 <Field id="outOfServiceLabel" type="label">
                     <Label>The Bike Share Plugin can fire a trigger if a service is reporting that a station is out of service.  Select the station that you want to monitor.</Label>
