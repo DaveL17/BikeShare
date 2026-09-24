@@ -39,6 +39,12 @@
   is ever populated (e.g. a new or misconfigured device) raised a fresh `KeyError` from
   inside the handler itself, which aborted the refresh for every device remaining in
   that cycle. Now reads `dev.states.get('num_bikes_available', 'Unknown')`.
+- Adds `tests/unit/`, an offline logic test suite for `parse_bike_data()`,
+  `business_hours()`, `process_triggers()`, `get_system_list()`, `get_bike_data()`, and
+  `refresh_bike_data()`. It stubs the `indigo` module and mocks `httpx` (see
+  `tests/unit/fakes.py`) so it needs no running Indigo server or `tests/.env`, and does
+  not use or modify `tests/shared` in any way. Includes regression coverage for several
+  fixes above (items #2, #5, #6, #7, and the earlier #13 `break` fix).
 
 ### v2025.2.3 [released]
 - Fixes `process_triggers()` accessing undefined `statusValue` state, which caused all trigger firing to silently fail;
